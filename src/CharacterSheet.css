@@ -1,0 +1,34 @@
+div#characterSheet {
+  margin: 15px;
+}
+
+div#metatypegroup > div {
+  margin-right: 15px;
+}
+
+div.attrInput input.bp3-input {
+  width: 50px;
+}
+
+div.rb-priority-selector {
+  width: 150px;
+  display: inline-block;
+}
+
+div.rb-priority-description-container {
+  display: inline-block;
+  width: 650px;
+}
+
+div.rb-priority-description-container div {
+  border: 1px dashed grey;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+div.rb-priority-item {
+  border: 1px dashed gray;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+  cursor: move;
+}
