@@ -45,7 +45,6 @@ class CharacterTabs extends React.Component {
     super(props);
 
     this.state = { characterInitialized: false };
-
     this.initCharacter = this.initCharacter.bind(this);
   }
 

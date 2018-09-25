@@ -4,6 +4,7 @@ import { Select } from "@blueprintjs/select";
 
 import renderMenuItem from './renderMenuItem';
 import getMetatypes from './getMetatypes';
+import SourceLink from './SourceLink';
 
 class Metatype extends React.Component {
   constructor(props) {
@@ -116,7 +117,10 @@ class Metatype extends React.Component {
     let variantIntent = ((typeIntent !== 'warning') && this.state.metatypeVariants.includes(this.state.metavariant)) ? 'none' : 'warning';
 
     return (
-      <div>
+      <FormGroup
+        helperText={<span>Reference: <SourceLink source={this.state.metavariant.source} page={this.state.metavariant.page} /></span>}
+        labelFor="metatypegroup"
+      >
         <ControlGroup id="metatypegroup">
           <FormGroup
             label="Metatype Category"
@@ -163,7 +167,7 @@ class Metatype extends React.Component {
             </Select>
           </FormGroup>
         </ControlGroup>
-      </div>
+      </FormGroup>
     );
   }
 }

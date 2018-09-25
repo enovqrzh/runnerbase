@@ -1,11 +1,14 @@
 import React from 'react';
 import { MenuItem } from "@blueprintjs/core";
 import { ItemRenderer } from "@blueprintjs/select";
+import SourceLink from './SourceLink';
 
 const renderMenuItem: ItemRenderer = (item, { handleClick, modifiers, query }) => {
-  if (!modifiers.matchesPredicate) {
+  if (! modifiers.matchesPredicate) {
     return null;
   }
+
+
   return (
     <MenuItem
       active={modifiers.active}
@@ -13,6 +16,7 @@ const renderMenuItem: ItemRenderer = (item, { handleClick, modifiers, query }) =
       key={item.id}
       onClick={handleClick}
       text={item.name}
+      labelElement={(item.hasOwnProperty('source') ? <SourceLink source={item.source} page={item.page} /> : null)}
     />
   );
 };
