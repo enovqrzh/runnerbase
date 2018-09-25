@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -195,14 +195,17 @@ class PrioSelPanel extends React.Component {
 
   render() {
     return (
-      <div>
+      <FormGroup
+        label="Priority Selection"
+        helperText={<span>Reference: <SourceLink source="SR5" page="65" /></span>}
+      >
         <PrioritySelector updatePriorityDescriptions={this.updatePriorityDescriptions} origPriorities={this.state.items}/>
         <div className="rb-priority-description-container">
           {this.state.items.map((prio, i) => (
-            <div key={prio.key}>{prio.getDescription(i, character)}</div>
+            <div className={Classes.BUTTON} key={prio.key}>{prio.getDescription(i, character)}</div>
           ))}
         </div>
-      </div>
+      </FormGroup>
     );
   }
 }

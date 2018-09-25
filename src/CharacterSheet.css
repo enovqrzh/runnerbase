@@ -11,26 +11,34 @@ div.attrInput input.bp3-input {
 }
 
 div.rb-priority-selector {
-  width: 150px;
+  width: 125px;
   display: inline-block;
 }
 
 div.rb-priority-description-container {
   display: inline-block;
-  width: 650px;
+  width: 300px;
 }
 
-div.rb-priority-description-container div {
-  border: 1px dashed grey;
-  padding: 0.5rem 1rem;
-  margin-bottom: 0.5rem;
+div.rb-priority-description-container div.bp3-button,
+div.rb-priority-description-container div.bp3-button:hover,
+div.rb-priority-description-container div.bp3-button:active {
+  width: 300px;
+  justify-content: left;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  cursor: unset;
+  background-image: none;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba(16, 22, 26, 0.2), inset 0 -1px 0 rgba(16, 22, 26, 0.1);
 }
 
-div.rb-priority-item {
-  border: 1px dashed gray;
-  padding: 0.5rem 1rem;
-  margin-bottom: 0.5rem;
+div.rb-priority-selector div.bp3-button {
+  width: 125px;
   cursor: move;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  justify-content: left;
 }
 
 span.rb-source-link {

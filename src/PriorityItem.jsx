@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { PropTypes } from 'prop-types';
 import { DragSource, DropTarget } from 'react-dnd';
+import { Classes } from "@blueprintjs/core"
 
 const Types = {
   ITEM: 'PriorityItem'
@@ -58,7 +59,7 @@ class PriorityItem extends Component {
       const opacity = isDragging ? 0 : 1;
 
       return connectDragSource(connectDropTarget(
-        <div className="rb-priority-item" style={{...opacity }} id={this.props.id}>
+        <div className={Classes.BUTTON} style={{...opacity }} id={this.props.id}>
           {text}
         </div>
       ));
