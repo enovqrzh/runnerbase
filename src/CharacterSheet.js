@@ -154,6 +154,7 @@ class GameOptionsPanel extends React.Component {
       <FormGroup
         label="Runner Level"
         labelFor="RunnerLevel"
+        helperText={<span>Reference: <SourceLink source="SR5" page="64" /></span>}
       >
         <Select
           id="RunnerLevel"
@@ -311,14 +312,33 @@ class AttrPanel extends React.Component {
   constructor(props) {
     super(props);
 
-    let attrPrio = character.prioritiesData.find((element) => {
+    const attrPrio = character.prioritiesData.find((element) => {
       return (element.key === "attr");
     });
+
+    const metaPrio = character.prioritiesData.find((element) => {
+      return (element.key === "meta");
+    });
+
+    const metatypePrioItem = metaPrio.metatypes.metatype.find((element) => {
+      return (element.name === character.metatype.name);
+    });
+
+    const metavariantPrioItem = (! character.metavariant) ?
+        metatypePrioItem
+      :
+        (! Array.isArray(metatypePrioItem.metavariants.metavariant)) ?
+          metatypePrioItem.metavariants.metavariant
+        :
+          metatypePrioItem.metavariants.metavariant.find((element) => {
+            return (element.name === character.metavariant.name);
+          });
 
     // Reset the max, min, and total for attributes in case metatype changed
     this.state = {
       attrs: this.setAttrsMMT(character.attributes),
-      attrPtsTotal: attrPrio.attributes
+      attrPtsTotal: attrPrio.attributes,
+      specialPtsTotal: metavariantPrioItem.value
     };
 
     this.updateAttr = this.updateAttr.bind(this);
@@ -345,7 +365,6 @@ class AttrPanel extends React.Component {
     if (character.talent.hasOwnProperty('magic')) {
       attrs = attrs.filter(attr => {return ((attr.key !== 'res') && (attr.key !== 'dep'))});
       const i = attrs.findIndex(attr => {return attr.key === 'mag';});
-      console.log(i);
       if ( i === -1 ) {
         attrs.push({ name: "Magic", key: "mag", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.magic });
       } else {
@@ -392,19 +411,25 @@ class AttrPanel extends React.Component {
         totalvalue: {$apply: function(x) { return x + diff }}
       }});
 
-      updateCharacter({attributes: attrs});
-      this.setState({attrs: character.attributes});
+      updateCharacter({ attributes: attrs });
+      this.setState({ attrs: character.attributes });
     }
   }
 
   render() {
     let attrAtMax = null;
     let attrPtsRemaining = this.state.attrPtsTotal;
+    let specialPtsRemaining = this.state.specialPtsTotal;
 
     this.state.attrs.forEach(attr => {
-      attrPtsRemaining = attrPtsRemaining - attr.base;
-      if ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ) {
-        attrAtMax = attr.key;
+      if (attr.hasOwnProperty('special') && attr.special) {
+        specialPtsRemaining = specialPtsRemaining - attr.base;
+      } else {
+        attrPtsRemaining = attrPtsRemaining - attr.base;
+
+        if ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ) {
+          attrAtMax = attr.key;
+        }
       }
     });
 
@@ -425,8 +450,8 @@ class AttrPanel extends React.Component {
               id={attr.key}
               key={attr.key}
               attr={attr}
-              attrAtMax={attrAtMax}
-              attrPtsRemaining={attrPtsRemaining}
+              attrAtMax={(attr.hasOwnProperty('special') && attr.special) ? null : attrAtMax}
+              attrPtsRemaining={(attr.hasOwnProperty('special') && attr.special) ? specialPtsRemaining : attrPtsRemaining}
               updateAttr={this.updateAttr}
             />
           ))}
