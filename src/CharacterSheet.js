@@ -9,6 +9,7 @@ import update from 'immutability-helper';
 import renderMenuItem from './renderMenuItem';
 import PrioritySelector from './PrioritySelector';
 import priorities from './priorities';
+import SourceLink from './SourceLink';
 
 import Metatype from './Metatype'
 import getMetatypes from './getMetatypes';
@@ -32,6 +33,7 @@ class CharacterSheet extends React.Component {
         <CharacterTabs>
           <Tab id="gameoptsel" title="Gameplay Options" panel={<GameOptionsPanel />} />
           <Tab id="priosel" title="Priority Selection" panel={<PrioSelPanel />} />
+          <Tab id="talentsel" title="Talent" panel={<TalentSelPanel />} />
           <Tab id="metatypesel" title="Metatype" panel={<MetatypePanel />} />
           <Tab id="attr" title="Attributes" panel={<AttrPanel />} />
         </CharacterTabs>
@@ -186,6 +188,8 @@ class PrioSelPanel extends React.Component {
       prioData.push(prio.getData(i, character));
     });
     updateCharacter({priorities: items, prioritiesData: prioData});
+
+    // TODO: Clear the talent if it's priority E
   }
 
   updatePriorityDescriptions(items) {
@@ -196,7 +200,6 @@ class PrioSelPanel extends React.Component {
   render() {
     return (
       <FormGroup
-        label="Priority Selection"
         helperText={<span>Reference: <SourceLink source="SR5" page="65" /></span>}
       >
         <PrioritySelector updatePriorityDescriptions={this.updatePriorityDescriptions} origPriorities={this.state.items}/>
@@ -210,11 +213,84 @@ class PrioSelPanel extends React.Component {
   }
 }
 
+class TalentSelPanel extends React.Component {
+  constructor(props) {
+    super(props);
+
+    const talentPrio = this.getTalentPrio();
+    const talentOptions = talentPrio.talents.talent.map((talent) => {
+      return Object.assign(talent, { id: talent.name });
+    });
+
+    this.state = {
+      talentPrio: talentPrio,
+      talentOptions: talentOptions,
+      talent: character.talent
+    };
+
+    this.updateTalent = this.updateTalent.bind(this);
+  }
+
+  initPanel() {
+    const talentPrio = this.getTalentPrio();
+    this.updateCharacterTalent(talentPrio.talents.talent[0]);
+  }
+
+  getTalentPrio() {
+    return character.prioritiesData.find((element) => {
+      return (element.key === "talent");
+    });
+  }
+
+  updateTalent(talent) {
+    // TODO: Skill selection
+    this.setState({
+      talent: talent
+    });
+
+    this.updateCharacterTalent(talent);
+  }
+
+  updateCharacterTalent(talent) {
+    // TODO: Qualities, exlcudes, attributes, skill selection, spells/complexforms
+
+    updateCharacter({
+      talent: talent,
+      prioritytalent: talent.value,
+    });
+  }
+
+  render() {
+    let talentIntent = null;
+    if (! this.state.talentOptions.includes(this.state.talent)) {
+      talentIntent = 'warning';
+    }
+
+    // TODO: Skill select based on talent
+    return (
+      <FormGroup
+        helperText={<span>Reference: <SourceLink source="SR5" page="68" /></span>}
+      >
+        <Select
+          id="Talent"
+          items={this.state.talentOptions}
+          itemRenderer={renderMenuItem}
+          filterable={false}
+          intent={talentIntent}
+          onItemSelect={this.updateTalent}
+        >
+          <Button text={this.state.talent.name} rightIcon="double-caret-vertical" />
+        </Select>
+      </FormGroup>
+    );
+  }
+}
+
 class MetatypePanel extends React.PureComponent {
   initPanel() {
     let metaPrio = character.prioritiesData.find((element) => {
       return (element.key === "meta");
-    })
+    });
     let metatypes = getMetatypes({id: 0, name: "Metahuman"}, metaPrio);
 
     updateCharacter({
@@ -266,16 +342,43 @@ class AttrPanel extends React.Component {
   setAttrsMMT(attrs) {
     let meta = character.metavariant ? character.metavariant : character.metatype;
 
+    if (character.talent.hasOwnProperty('magic')) {
+      attrs = attrs.filter(attr => {return ((attr.key !== 'res') && (attr.key !== 'dep'))});
+      const i = attrs.findIndex(attr => {return attr.key === 'mag';});
+      console.log(i);
+      if ( i === -1 ) {
+        attrs.push({ name: "Magic", key: "mag", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.magic });
+      } else {
+        attrs[i].talentMin = character.talent.magic;
+      }
+    } else if (character.talent.hasOwnProperty('resonance')) {
+      attrs = attrs.filter(attr => {return ((attr.key !== 'mag') && (attr.key !== 'dep'))});
+      const i = attrs.findIndex(attr => {return attr.key === 'res';});
+      if ( i === -1 ) {
+        attrs.push({ name: "Resonance", key: "res", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.resonance });
+      } else {
+        attrs[i].talentMin = character.talent.resonance;
+      }
+    } else if (character.talent.hasOwnProperty('depth')) {
+      attrs = attrs.filter(attr => {return ((attr.key !== 'res') && (attr.key !== 'mag'))});
+      const i = attrs.findIndex(attr => {return attr.key === 'dep';});
+      if ( i === -1 ) {
+        attrs.push({ name: "Depth", key: "dep", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.depth });
+      } else {
+        attrs[i].talentMin = character.talent.depth;
+      }
+    }
+
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
     attrs = attrs.map(attr => {
-      attr.metatypemin = Number(meta[attr.key + "min"]);
+      attr.metatypemin = Number(attr.hasOwnProperty('talentMin') ? attr.talentMin : meta[attr.key + "min"]);
       attr.metatypemax = Number(meta[attr.key + "max"]);
       attr.metatypeaugmax = Number(meta[attr.key + "aug"]);
-      attr.totalvalue = Number(meta[attr.key + "min"]) + attr.base + attr.karma;
+      attr.totalvalue = attr.metatypemin + attr.base + attr.karma;
       return attr;
     });
 
-    updateCharacter({attributes: attrs});
+    updateCharacter({ attributes: attrs });
     return attrs;
   }
 
@@ -304,8 +407,6 @@ class AttrPanel extends React.Component {
         attrAtMax = attr.key;
       }
     });
-
-    console.log(attrPtsRemaining);
 
     return (
       <HTMLTable>
