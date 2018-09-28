@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Card, Classes, Dialog, EditableText, Elevation, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -25,7 +25,7 @@ function updateCharacter(elements) {
   console.log(character);
 }
 
-class CharacterSheet extends React.Component {
+class CharacterSheet extends React.PureComponent {
   render() {
     return (
       <div id="characterSheet">
@@ -42,12 +42,28 @@ class CharacterSheet extends React.Component {
   }
 }
 
+const RemainingContext = React.createContext({
+  karmaRemaining: null,
+  attrPtsRemaining: null,
+  specialPtsRemaining: null,
+  update: () => {}
+});
+
 class CharacterTabs extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = { characterInitialized: false };
+    this.state = {
+      characterInitialized: false,
+      remaining: {
+        karmaRemaining: null,
+        attrPtsRemaining: null,
+        specialPtsRemaining: null,
+        update: this.updateRemaining
+      }
+    };
     this.initCharacter = this.initCharacter.bind(this);
+    this.updateRemaining = this.updateRemaining.bind(this);
   }
 
   initCharacter() {
@@ -57,7 +73,23 @@ class CharacterTabs extends React.Component {
       }
     });
 
-    this.setState({ characterInitialized: true });
+    this.setState({
+      characterInitialized: true,
+    });
+
+    this.updateRemaining();
+
+    updateCharacter({ updateRem: this.updateRemaining });
+  }
+
+  updateRemaining() {
+    this.setState({
+      remaining: {
+        karmaRemaining: character.karmaRemaining,
+        attrPtsRemaining: character.attrPtsRemaining,
+        specialPtsRemaining: character.specialPtsRemaining,
+      }
+    });
   }
 
   render() {
@@ -73,9 +105,12 @@ class CharacterTabs extends React.Component {
         </Dialog>
         <CharacterName />
         <PlayerName />
-        <Tabs renderActiveTabPanelOnly={true}>
-          {this.props.children.map(child => {return child;})}
-        </Tabs>
+        <RemainingContext.Provider value={this.state.remaining}>
+          <RemainingCard />
+          <Tabs renderActiveTabPanelOnly={true}>
+            {this.props.children.map(child => { return child; })}
+          </Tabs>
+        </RemainingContext.Provider>
       </div>
     );
   }
@@ -100,6 +135,24 @@ class PlayerName extends React.PureComponent {
       >
         <InputGroup id="playername" />
       </FormGroup>
+    );
+  }
+}
+
+class RemainingCard extends React.Component {
+  render() {
+    return (
+      <RemainingContext.Consumer>
+        {({karmaRemaining, attrPtsRemaining, specialPtsRemaining}) => (
+          <Card elevation={Elevation.ONE} className="rb-remaining-card">
+            <HTMLTable small={true}>
+              <tr><td>Karma Remaining:</td><td>{karmaRemaining}</td></tr>
+              <tr><td>Attribute Points Remaining:</td><td>{attrPtsRemaining}</td></tr>
+              <tr><td>Special Attribute Points Remaining:</td><td>{specialPtsRemaining}</td></tr>
+            </HTMLTable>
+          </Card>
+        )}
+      </RemainingContext.Consumer>
     );
   }
 }
@@ -312,33 +365,12 @@ class AttrPanel extends React.Component {
   constructor(props) {
     super(props);
 
-    const attrPrio = character.prioritiesData.find((element) => {
-      return (element.key === "attr");
-    });
-
-    const metaPrio = character.prioritiesData.find((element) => {
-      return (element.key === "meta");
-    });
-
-    const metatypePrioItem = metaPrio.metatypes.metatype.find((element) => {
-      return (element.name === character.metatype.name);
-    });
-
-    const metavariantPrioItem = (! character.metavariant) ?
-        metatypePrioItem
-      :
-        (! Array.isArray(metatypePrioItem.metavariants.metavariant)) ?
-          metatypePrioItem.metavariants.metavariant
-        :
-          metatypePrioItem.metavariants.metavariant.find((element) => {
-            return (element.name === character.metavariant.name);
-          });
-
     // Reset the max, min, and total for attributes in case metatype changed
+    this.setAttrsMMT(character.attributes);
     this.state = {
-      attrs: this.setAttrsMMT(character.attributes),
-      attrPtsTotal: attrPrio.attributes,
-      specialPtsTotal: metavariantPrioItem.value
+      attributes: character.attributes,
+      attrPtsRemaining: character.attrPtsRemaining,
+      specialPtsRemaining: character.specialPtsRemaining,
     };
 
     this.updateAttr = this.updateAttr.bind(this);
@@ -346,14 +378,15 @@ class AttrPanel extends React.Component {
 
   initPanel() {
     let attrs = [
-      { name: "Body", key: "bod", base: 0, karma: 0, augmodifier: 0},
-      { name: "Agility", key: "agi", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Reaction", key: "rea", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Strength", key: "str", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Charisma", key: "cha", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Intuition", key: "int", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Logic", key: "log", base: 0, karma: 0, augmodifier: 0 },
-      { name: "Willpower", key: "wil", base: 0, karma: 0, augmodifier: 0 }
+      { name: "Body", key: "bod", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Agility", key: "agi", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Reaction", key: "rea", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Strength", key: "str", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Charisma", key: "cha", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Intuition", key: "int", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Logic", key: "log", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Willpower", key: "wil", base: 0, karma: 0, augmodifier: 0, special: false },
+      { name: "Edge", key: "edg", base: 0, karma: 0, augmodifier: 0, special: true}
     ];
 
     this.setAttrsMMT(attrs);
@@ -389,7 +422,36 @@ class AttrPanel extends React.Component {
     }
 
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
+    const attrPrio = character.prioritiesData.find((element) => {
+      return (element.key === "attr");
+    });
+
+    const metaPrio = character.prioritiesData.find((element) => {
+      return (element.key === "meta");
+    });
+
+    const metatypePrioItem = metaPrio.metatypes.metatype.find((element) => {
+      return (element.name === character.metatype.name);
+    });
+
+    const metavariantPrioItem = (! character.metavariant) ?
+        metatypePrioItem
+      :
+        (! Array.isArray(metatypePrioItem.metavariants.metavariant)) ?
+          metatypePrioItem.metavariants.metavariant
+        :
+          metatypePrioItem.metavariants.metavariant.find((element) => {
+            return (element.name === character.metavariant.name);
+          });
+
+    let state = {
+      attrPtsRemaining: attrPrio.attributes,
+      specialPtsRemaining: metavariantPrioItem.value
+    };
+
     attrs = attrs.map(attr => {
+      this.subtractPts(attr.base, attr.special, state);
+
       attr.metatypemin = Number(attr.hasOwnProperty('talentMin') ? attr.talentMin : meta[attr.key + "min"]);
       attr.metatypemax = Number(meta[attr.key + "max"]);
       attr.metatypeaugmax = Number(meta[attr.key + "aug"]);
@@ -397,41 +459,45 @@ class AttrPanel extends React.Component {
       return attr;
     });
 
-    updateCharacter({ attributes: attrs });
-    return attrs;
+    updateCharacter(Object.assign({ attributes: attrs }, state));
+  }
+
+  subtractPts(diff, special, state) {
+    if (special) {
+      state.specialPtsRemaining = state.specialPtsRemaining - diff;
+    } else {
+      state.attrPtsRemaining = state.attrPtsRemaining - diff;
+    }
   }
 
   updateAttr(key, value, type = 'base') {
     // TODO: Karma costs for attributes
-    let i = this.state.attrs.findIndex(attr => attr.key === key);
-    let diff = value - this.state.attrs[i][type];
+    let i = this.state.attributes.findIndex(attr => attr.key === key);
+    let diff = value - this.state.attributes[i][type];
     if (diff !== 0) {
-      let attrs = update(this.state.attrs, {[i]: {
+      let attrs = update(this.state.attributes, {[i]: {
         [type]: {$set: value},
         totalvalue: {$apply: function(x) { return x + diff }}
       }});
 
-      updateCharacter({ attributes: attrs });
-      this.setState({ attrs: character.attributes });
+      let updateObj = { attributes: attrs };
+
+      if (type === 'base') {
+        if (this.state.attributes[i].special) {
+          updateObj.specialPtsRemaining = this.state.specialPtsRemaining - diff;
+        } else {
+          updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
+        }
+      }
+
+      updateCharacter(updateObj);
+      character.updateRem();
+      this.setState(updateObj);
     }
   }
 
   render() {
-    let attrAtMax = null;
-    let attrPtsRemaining = this.state.attrPtsTotal;
-    let specialPtsRemaining = this.state.specialPtsTotal;
-
-    this.state.attrs.forEach(attr => {
-      if (attr.hasOwnProperty('special') && attr.special) {
-        specialPtsRemaining = specialPtsRemaining - attr.base;
-      } else {
-        attrPtsRemaining = attrPtsRemaining - attr.base;
-
-        if ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ) {
-          attrAtMax = attr.key;
-        }
-      }
-    });
+    let attrAtMax = this.state.attributes.find(attr => ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ));
 
     return (
       <HTMLTable>
@@ -445,13 +511,13 @@ class AttrPanel extends React.Component {
           </tr>
         </thead>
         <tbody>
-          {this.state.attrs.map(attr => (
+          {this.state.attributes.map(attr => (
             <AttributeRow
               id={attr.key}
               key={attr.key}
               attr={attr}
-              attrAtMax={(attr.hasOwnProperty('special') && attr.special) ? null : attrAtMax}
-              attrPtsRemaining={(attr.hasOwnProperty('special') && attr.special) ? specialPtsRemaining : attrPtsRemaining}
+              attrAtMax={(attrAtMax && (! attr.special)) ? attrAtMax.key : null}
+              attrPtsRemaining={attr.special ? this.state.specialPtsRemaining : this.state.attrPtsRemaining}
               updateAttr={this.updateAttr}
             />
           ))}

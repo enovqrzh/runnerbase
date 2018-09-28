@@ -2,6 +2,10 @@ div#characterSheet {
   margin: 15px;
 }
 
+div.rb-remaining-card {
+  display: inline-block;
+}
+
 div#metatypegroup > div {
   margin-right: 15px;
 }
