@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Card, Classes, Dialog, EditableText, Elevation, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Classes, Dialog, Divider, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -21,6 +21,7 @@ import gameOptions from './data/gameplayoptions'
 var character = {};
 
 function updateCharacter(elements) {
+  // TODO: Check if the remaining box variables are being updated and call this.updateRem
   character = Object.assign(character, elements);
   console.log(character);
 }
@@ -100,13 +101,16 @@ class CharacterTabs extends React.Component {
           icon="new-person"
           isOpen={(! this.state.characterInitialized)}
           onClose={this.initCharacter}
+          isCloseButtonShown={false}
         >
-          Would you like to <Button>import</Button> a previous character from RunnerBase or Chummer, or would you like to <Button onClick={this.initCharacter}>create</Button> a new character?
+          <Button icon="new-person" onClick={this.initCharacter}>Create a new character</Button>
         </Dialog>
-        <CharacterName />
-        <PlayerName />
         <RemainingContext.Provider value={this.state.remaining}>
-          <RemainingCard />
+          <div className="rb-top-box">
+            <CharacterName />
+            <RemainingCard />
+          </div>
+          <PlayerName />
           <Tabs renderActiveTabPanelOnly={true}>
             {this.props.children.map(child => { return child; })}
           </Tabs>
@@ -140,17 +144,18 @@ class PlayerName extends React.PureComponent {
 }
 
 class RemainingCard extends React.Component {
+  // TODO: Intent for negative values
   render() {
     return (
       <RemainingContext.Consumer>
         {({karmaRemaining, attrPtsRemaining, specialPtsRemaining}) => (
-          <Card elevation={Elevation.ONE} className="rb-remaining-card">
-            <HTMLTable small={true}>
-              <tr><td>Karma Remaining:</td><td>{karmaRemaining}</td></tr>
-              <tr><td>Attribute Points Remaining:</td><td>{attrPtsRemaining}</td></tr>
-              <tr><td>Special Attribute Points Remaining:</td><td>{specialPtsRemaining}</td></tr>
-            </HTMLTable>
-          </Card>
+          <div className="rb-remaining-box">
+            <span><span>Attribute Points Remaining:</span> {attrPtsRemaining}</span>
+            <Divider />
+            <span><span>Special Attribute Points Remaining:</span> {specialPtsRemaining}</span>
+            <Divider />
+            <span><span>Karma Remaining:</span> {karmaRemaining}</span>
+          </div>
         )}
       </RemainingContext.Consumer>
     );
@@ -189,7 +194,8 @@ class GameOptionsPanel extends React.Component {
       maxavail: item.maxavailability,
       maxnuyen: item.maxnuyen,
       contactmultiplier: item.contactmultiplier,
-      bannedwaregrades: item.bannedwaregrades
+      bannedwaregrades: item.bannedwaregrades,
+      karmaRemaining: character.hasOwnProperty('buildKarma') ? item.karma - (character.buildKarma - character.karmaRemaining) : item.karma,
     };
 
     updateCharacter(gameOpts);
@@ -243,7 +249,7 @@ class PrioSelPanel extends React.Component {
     });
     updateCharacter({priorities: items, prioritiesData: prioData});
 
-    // TODO: Clear the talent if it's priority E
+    // TODO: Refund the special attribute points if Mundane is selected
   }
 
   updatePriorityDescriptions(items) {
@@ -371,6 +377,7 @@ class AttrPanel extends React.Component {
       attributes: character.attributes,
       attrPtsRemaining: character.attrPtsRemaining,
       specialPtsRemaining: character.specialPtsRemaining,
+      karmaRemaining: character.karmaRemaining,
     };
 
     this.updateAttr = this.updateAttr.bind(this);
@@ -471,7 +478,6 @@ class AttrPanel extends React.Component {
   }
 
   updateAttr(key, value, type = 'base') {
-    // TODO: Karma costs for attributes
     let i = this.state.attributes.findIndex(attr => attr.key === key);
     let diff = value - this.state.attributes[i][type];
     if (diff !== 0) {
@@ -487,6 +493,17 @@ class AttrPanel extends React.Component {
           updateObj.specialPtsRemaining = this.state.specialPtsRemaining - diff;
         } else {
           updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
+        }
+      } else {
+        updateObj.karmaRemaining = this.state.karmaRemaining;
+        if (diff > 0) {
+          for (let j = 1; j <= diff; j++) {
+            updateObj.karmaRemaining = updateObj.karmaRemaining - ((this.state.attributes[i].totalvalue + j) * 5);
+          }
+        } else {
+          for (let j = 1; j <= (diff * -1); j++) {
+            updateObj.karmaRemaining = updateObj.karmaRemaining + ((attrs[i].totalvalue + j) * 5);
+          }
         }
       }
 

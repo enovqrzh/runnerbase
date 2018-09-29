@@ -2,8 +2,14 @@ div#characterSheet {
   margin: 15px;
 }
 
-div.rb-remaining-card {
-  display: inline-block;
+div.rb-top-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+div.rb-remaining-box {
+  display: flex;
 }
 
 div#metatypegroup > div {
