@@ -1,3 +1,7 @@
+body {
+  background-color: #293742;
+}
+
 div#characterSheet {
   margin: 15px;
 }
@@ -16,6 +20,50 @@ div#metatypegroup > div {
   margin-right: 15px;
 }
 
+table#rb-attr-table {
+  border-collapse: collapse;
+}
+
+table#rb-attr-table thead th {
+  background-color: #182026;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+table#rb-attr-table tbody tr.rb-table-header2 th {
+  box-shadow: unset;
+  border-top: 1px solid #394B59;
+  border-bottom: 1px solid #394B59;
+  padding-top: 6px;
+  padding-left: 33px;
+  padding-right: 11px;
+  padding-bottom: 6px;
+  background-color: #202B33;
+}
+
+table#rb-attr-table td {
+  vertical-align: middle;
+  padding-left: 44px;
+  padding-right: 44px;
+}
+
+table#rb-attr-table thead th,
+table#rb-attr-table td:not(:first-child) {
+  text-align: center;
+}
+
+table#rb-attr-table tbody th {
+  color: #bfccd6;
+}
+
+table#rb-attr-table th.rb-points-remaining {
+  text-align: right;
+}
+
+table#rb-attr-table td div {
+  display: inline-flex;
+}
+
 div.attrInput input.bp3-input {
   width: 50px;
 }
@@ -30,9 +78,9 @@ div.rb-priority-description-container {
   width: 300px;
 }
 
-div.rb-priority-description-container div.bp3-button,
-div.rb-priority-description-container div.bp3-button:hover,
-div.rb-priority-description-container div.bp3-button:active {
+.bp3-dark div.rb-priority-description-container div.bp3-button,
+.bp3-dark div.rb-priority-description-container div.bp3-button:hover,
+.bp3-dark div.rb-priority-description-container div.bp3-button:active {
   width: 300px;
   justify-content: left;
   border-top-left-radius: 0;
@@ -48,7 +96,7 @@ div.rb-priority-selector div.bp3-button {
   cursor: move;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  justify-content: left;
+  justify-content: space-between;
 }
 
 span.rb-source-link {

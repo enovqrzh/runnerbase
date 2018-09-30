@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Classes, Dialog, Divider, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -21,15 +21,18 @@ import gameOptions from './data/gameplayoptions'
 var character = {};
 
 function updateCharacter(elements) {
-  // TODO: Check if the remaining box variables are being updated and call this.updateRem
   character = Object.assign(character, elements);
+
+  if (character.hasOwnProperty('updateRemaining') && elements.hasOwnProperty('karmaRemaining')) {
+    character.updateRemaining();
+  }
   console.log(character);
 }
 
 class CharacterSheet extends React.PureComponent {
   render() {
     return (
-      <div id="characterSheet">
+      <div id="characterSheet" className={Classes.DARK}>
         <H1>Character Sheet!:</H1>
         <CharacterTabs>
           <Tab id="gameoptsel" title="Gameplay Options" panel={<GameOptionsPanel />} />
@@ -44,10 +47,7 @@ class CharacterSheet extends React.PureComponent {
 }
 
 const RemainingContext = React.createContext({
-  karmaRemaining: null,
-  attrPtsRemaining: null,
-  specialPtsRemaining: null,
-  update: () => {}
+  karmaRemaining: null
 });
 
 class CharacterTabs extends React.Component {
@@ -57,10 +57,7 @@ class CharacterTabs extends React.Component {
     this.state = {
       characterInitialized: false,
       remaining: {
-        karmaRemaining: null,
-        attrPtsRemaining: null,
-        specialPtsRemaining: null,
-        update: this.updateRemaining
+        karmaRemaining: null
       }
     };
     this.initCharacter = this.initCharacter.bind(this);
@@ -79,16 +76,13 @@ class CharacterTabs extends React.Component {
     });
 
     this.updateRemaining();
-
-    updateCharacter({ updateRem: this.updateRemaining });
+    updateCharacter({ updateRemaining: this.updateRemaining });
   }
 
   updateRemaining() {
     this.setState({
       remaining: {
-        karmaRemaining: character.karmaRemaining,
-        attrPtsRemaining: character.attrPtsRemaining,
-        specialPtsRemaining: character.specialPtsRemaining,
+        karmaRemaining: character.karmaRemaining
       }
     });
   }
@@ -102,6 +96,7 @@ class CharacterTabs extends React.Component {
           isOpen={(! this.state.characterInitialized)}
           onClose={this.initCharacter}
           isCloseButtonShown={false}
+          className={Classes.DARK}
         >
           <Button icon="new-person" onClick={this.initCharacter}>Create a new character</Button>
         </Dialog>
@@ -148,12 +143,8 @@ class RemainingCard extends React.Component {
   render() {
     return (
       <RemainingContext.Consumer>
-        {({karmaRemaining, attrPtsRemaining, specialPtsRemaining}) => (
+        {({karmaRemaining}) => (
           <div className="rb-remaining-box">
-            <span><span>Attribute Points Remaining:</span> {attrPtsRemaining}</span>
-            <Divider />
-            <span><span>Special Attribute Points Remaining:</span> {specialPtsRemaining}</span>
-            <Divider />
             <span><span>Karma Remaining:</span> {karmaRemaining}</span>
           </div>
         )}
@@ -248,8 +239,6 @@ class PrioSelPanel extends React.Component {
       prioData.push(prio.getData(i, character));
     });
     updateCharacter({priorities: items, prioritiesData: prioData});
-
-    // TODO: Refund the special attribute points if Mundane is selected
   }
 
   updatePriorityDescriptions(items) {
@@ -312,7 +301,8 @@ class TalentSelPanel extends React.Component {
   }
 
   updateCharacterTalent(talent) {
-    // TODO: Qualities, exlcudes, attributes, skill selection, spells/complexforms
+    // TODO: Qualities, exlcudes, skill selection, spells/complexforms
+    // TODO: Refund the special attribute points if Mundane / a different talent is selected
 
     updateCharacter({
       talent: talent,
@@ -377,7 +367,7 @@ class AttrPanel extends React.Component {
       attributes: character.attributes,
       attrPtsRemaining: character.attrPtsRemaining,
       specialPtsRemaining: character.specialPtsRemaining,
-      karmaRemaining: character.karmaRemaining,
+      karmaRemaining: character.karmaRemaining
     };
 
     this.updateAttr = this.updateAttr.bind(this);
@@ -508,7 +498,6 @@ class AttrPanel extends React.Component {
       }
 
       updateCharacter(updateObj);
-      character.updateRem();
       this.setState(updateObj);
     }
   }
@@ -517,7 +506,7 @@ class AttrPanel extends React.Component {
     let attrAtMax = this.state.attributes.find(attr => ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ));
 
     return (
-      <HTMLTable>
+      <HTMLTable id="rb-attr-table" striped={true} bordered={true}>
         <thead>
           <tr>
             <th>Attribute Name</th>
@@ -528,13 +517,30 @@ class AttrPanel extends React.Component {
           </tr>
         </thead>
         <tbody>
-          {this.state.attributes.map(attr => (
+          <tr className="rb-table-header2">
+            <th colSpan="3">Physical and Mental Attributes</th>
+            <th colSpan="2" className="rb-points-remaining"><span>Points Remaining:</span> {this.state.attrPtsRemaining}</th>
+          </tr>
+          {this.state.attributes.filter(attr => (! attr.special)).map(attr => (
             <AttributeRow
               id={attr.key}
               key={attr.key}
               attr={attr}
-              attrAtMax={(attrAtMax && (! attr.special)) ? attrAtMax.key : null}
-              attrPtsRemaining={attr.special ? this.state.specialPtsRemaining : this.state.attrPtsRemaining}
+              attrAtMax={attrAtMax ? attrAtMax.key : null}
+              attrPtsRemaining={this.state.attrPtsRemaining}
+              updateAttr={this.updateAttr}
+            />
+          ))}
+          <tr className="rb-table-header2">
+            <th colSpan="3">Special Attributes</th>
+            <th colSpan="2" className="rb-points-remaining"><span>Points Remaining:</span> {this.state.specialPtsRemaining}</th>
+          </tr>
+          {this.state.attributes.filter(attr => attr.special).map(attr => (
+            <AttributeRow
+              id={attr.key}
+              key={attr.key}
+              attr={attr}
+              attrPtsRemaining={this.state.specialPtsRemaining}
               updateAttr={this.updateAttr}
             />
           ))}

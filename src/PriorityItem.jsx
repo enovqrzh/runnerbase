@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { PropTypes } from 'prop-types';
 import { DragSource, DropTarget } from 'react-dnd';
-import { Classes } from "@blueprintjs/core"
+import { Classes, Icon } from "@blueprintjs/core"
+import { IconNames } from "@blueprintjs/icons";
 
 const Types = {
   ITEM: 'PriorityItem'
@@ -60,7 +61,8 @@ class PriorityItem extends Component {
 
       return connectDragSource(connectDropTarget(
         <div className={Classes.BUTTON} style={{...opacity }} id={this.props.id}>
-          {text}
+          <span className="rb-dnd-button-text">{text}</span>
+          <Icon icon={IconNames.DRAG_HANDLE_VERTICAL} />
         </div>
       ));
   }
