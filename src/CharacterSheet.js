@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -35,6 +35,7 @@ class CharacterSheet extends React.PureComponent {
       <div id="characterSheet" className={Classes.DARK}>
         <H1>Character Sheet!:</H1>
         <CharacterTabs>
+          <Tab id="biotab" title="Bio" panel={<BioPanel />} />
           <Tab id="gameoptsel" title="Gameplay Options" panel={<GameOptionsPanel />} />
           <Tab id="priosel" title="Priority Selection" panel={<PrioSelPanel />} />
           <Tab id="talentsel" title="Talent" panel={<TalentSelPanel />} />
@@ -89,7 +90,7 @@ class CharacterTabs extends React.Component {
 
   render() {
     return (
-      <div>
+      <div className="rb-character">
         <Dialog
           title="Import or Create?"
           icon="new-person"
@@ -105,8 +106,7 @@ class CharacterTabs extends React.Component {
             <CharacterName />
             <RemainingCard />
           </div>
-          <PlayerName />
-          <Tabs renderActiveTabPanelOnly={true}>
+          <Tabs renderActiveTabPanelOnly={true} vertical={true}>
             {this.props.children.map(child => { return child; })}
           </Tabs>
         </RemainingContext.Provider>
@@ -119,7 +119,8 @@ class CharacterName extends React.PureComponent {
   render() {
     return (
       <H2>
-        <EditableText placeholder="Character Name" />
+        <EditableText placeholder="Character Name" />&nbsp;
+        <Icon icon="edit" color="#5C7080" />
       </H2>
     );
   }
@@ -149,6 +150,14 @@ class RemainingCard extends React.Component {
           </div>
         )}
       </RemainingContext.Consumer>
+    );
+  }
+}
+
+class BioPanel extends React.PureComponent {
+  render() {
+    return (
+      <PlayerName />
     );
   }
 }
@@ -506,7 +515,7 @@ class AttrPanel extends React.Component {
     let attrAtMax = this.state.attributes.find(attr => ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ));
 
     return (
-      <HTMLTable id="rb-attr-table" striped={true} bordered={true}>
+      <HTMLTable id="rb-attr-table" bordered={true}>
         <thead>
           <tr>
             <th>Attribute Name</th>

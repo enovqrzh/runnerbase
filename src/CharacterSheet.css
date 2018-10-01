@@ -6,14 +6,23 @@ div#characterSheet {
   margin: 15px;
 }
 
-div.rb-top-box {
+div.rb-character {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  flex-direction: column;
+  flex-wrap: wrap;
 }
 
 div.rb-remaining-box {
   display: flex;
+}
+
+div.bp3-tabs {
+  padding-top: 11px;
+}
+
+div.bp3-tab-panel {
+  box-shadow: 1px 1px 0 1px inset rgba(19, 124, 189, 0.2);
+  padding: 20px;
 }
 
 div#metatypegroup > div {
@@ -45,6 +54,8 @@ table#rb-attr-table td {
   vertical-align: middle;
   padding-left: 44px;
   padding-right: 44px;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 table#rb-attr-table thead th,
