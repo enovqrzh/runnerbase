@@ -1,78 +1,95 @@
-/*
- * Copyright 2017 Palantir Technologies, Inc. All rights reserved.
- */
+@import "@blueprintjs/core/lib/scss/variables.scss";
+
 body {
-  background-color: #293742; }
+  background-color: $pt-dark-app-background-color;
+}
 
 div#characterSheet {
-  margin: 15px; }
+  margin: 15px;
+}
 
 div.rb-character {
   display: flex;
   flex-direction: column;
-  flex-wrap: wrap; }
+  flex-wrap: wrap;
+}
 
 div.rb-remaining-box {
-  display: flex; }
+  display: flex;
+}
 
 div.bp3-tabs {
-  padding-top: 11px; }
+  padding-top: 11px;
+}
 
 div.bp3-tab-panel {
   box-shadow: 1px 1px 0 1px inset rgba(19, 124, 189, 0.2);
-  padding: 20px; }
+  padding: 20px;
+}
 
 div#metatypegroup > div {
-  margin-right: 15px; }
+  margin-right: 15px;
+}
 
 table#rb-attr-table {
-  border-collapse: collapse; }
+  border-collapse: collapse;
+}
 
 table#rb-attr-table thead th {
-  background-color: #182026;
+  background-color: $dark-gray1;
   padding-top: 6px;
-  padding-bottom: 6px; }
+  padding-bottom: 6px;
+}
 
 table#rb-attr-table tbody tr.rb-table-header2 th {
   box-shadow: unset;
-  border-top: 1px solid #394b59;
-  border-bottom: 1px solid #394b59;
+  border-top: 1px solid $dark-gray5;
+  border-bottom: 1px solid $dark-gray5;
   padding-top: 6px;
   padding-left: 33px;
   padding-right: 11px;
   padding-bottom: 6px;
-  background-color: #202b33; }
+  background-color: $dark-gray2;
+}
 
 table#rb-attr-table td {
   vertical-align: middle;
   padding-left: 44px;
   padding-right: 44px;
   padding-top: 3px;
-  padding-bottom: 3px; }
+  padding-bottom: 3px;
+}
 
 table#rb-attr-table thead th,
 table#rb-attr-table td:not(:first-child) {
-  text-align: center; }
+  text-align: center;
+}
 
 table#rb-attr-table tbody th {
-  color: #bfccd6; }
+  color: $gray5;
+}
 
 table#rb-attr-table th.rb-points-remaining {
-  text-align: right; }
+  text-align: right;
+}
 
 table#rb-attr-table td div {
-  display: inline-flex; }
+  display: inline-flex;
+}
 
 div.attrInput input.bp3-input {
-  width: 50px; }
+  width: 50px;
+}
 
 div.rb-priority-selector {
   width: 125px;
-  display: inline-block; }
+  display: inline-block;
+}
 
 div.rb-priority-description-container {
   display: inline-block;
-  width: 300px; }
+  width: 300px;
+}
 
 .bp3-dark div.rb-priority-description-container div.bp3-button,
 .bp3-dark div.rb-priority-description-container div.bp3-button:hover,
@@ -84,15 +101,18 @@ div.rb-priority-description-container {
   cursor: unset;
   background-image: none;
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(16, 22, 26, 0.2), inset 0 -1px 0 rgba(16, 22, 26, 0.1); }
+  box-shadow: inset 0 0 0 1px rgba(16, 22, 26, 0.2), inset 0 -1px 0 rgba(16, 22, 26, 0.1);
+}
 
 div.rb-priority-selector div.bp3-button {
   width: 125px;
   cursor: move;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  justify-content: space-between; }
+  justify-content: space-between;
+}
 
 span.rb-source-link {
   cursor: pointer;
-  color: #48aff0; }
+  color: $pt-dark-link-color;
+}
