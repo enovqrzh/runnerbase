@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Callout, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
@@ -140,14 +140,13 @@ class PlayerName extends React.PureComponent {
 }
 
 class RemainingCard extends React.Component {
-  // TODO: Intent for negative values
   render() {
     return (
       <RemainingContext.Consumer>
         {({karmaRemaining}) => (
-          <div className="rb-remaining-box">
+          <Callout className="rb-remaining-box" intent={(karmaRemaining >= 0) ? null : "warning"}>
             <span><span>Karma Remaining:</span> {karmaRemaining}</span>
-          </div>
+          </Callout>
         )}
       </RemainingContext.Consumer>
     );
@@ -310,7 +309,7 @@ class TalentSelPanel extends React.Component {
   }
 
   updateCharacterTalent(talent) {
-    // TODO: Qualities, exlcudes, skill selection, spells/complexforms
+    // TODO: Qualities, excludes, skill selection, spells/complexforms
     // TODO: Refund the special attribute points if Mundane / a different talent is selected
 
     updateCharacter({
