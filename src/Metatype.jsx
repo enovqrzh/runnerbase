@@ -16,7 +16,7 @@ class Metatype extends React.Component {
     });
     let metatypeCategories = this.getMetatypeCategories(metaPrio);
 
-    metatypes = getMetatypes(this.props.origCharacter.metatypecategory, metaPrio);
+    metatypes = getMetatypes(this.props.origCharacter.metatypecategory, metaPrio, this.props.origCharacter.demands);
     this.state = {
       category: this.props.origCharacter.metatypecategory,
       categoryTypes: metatypes,
@@ -43,10 +43,14 @@ class Metatype extends React.Component {
       metatypeCategories.push({id: 2, name: "Shapeshifter"});
     }
 
+    // TODO: Filter from demands
+
     return metatypeCategories;
   }
 
   getMetavariants(metatype, metaPrio) {
+    // TODO: Filter from demands
+
     let metavariants = [];
     if (metatype.hasOwnProperty('metavariants')) {
       if (Array.isArray(metatype.metavariants.metavariant)) {
@@ -69,8 +73,10 @@ class Metatype extends React.Component {
 
   handleCategoryValueChange(item) {
     // If the category actually changed, reset the metatype select
+
+    // TODO: Don't change metatype and variant if their option array comes back empty
     if (this.state.category !== item) {
-      let metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.state.metaPrio);
+      let metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.state.metaPrio, this.props.origCharacter.demands);
       this.setState({
         category: item,
         categoryTypes: metatypes,

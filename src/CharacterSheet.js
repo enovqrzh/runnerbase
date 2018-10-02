@@ -18,7 +18,21 @@ import AttributeRow from './AttributeRow'
 
 import gameOptions from './data/gameplayoptions'
 
-var character = { excludes: [], requires: [] };
+var character = {
+  demands: {
+    getDemandValues: (type, target) => {
+      let values = [];
+      character.demands[type].forEach(demand => {
+        if (demand.target === target)
+          values.push(demand.item);
+      });
+
+      return values;
+    },
+    excludes: [],
+    requires: []
+  }
+};
 
 function updateCharacter(elements) {
   character = Object.assign(character, elements);
@@ -31,8 +45,8 @@ function updateCharacter(elements) {
 
 // TODO: Apply demands
 function updateDemands(source, excludes = null, requires = null) {
-  character.excludes = character.excludes.filter(demand => demand.source !== source).concat(generateDemands(source, excludes));
-  character.requires = character.requires.filter(demand => demand.source !== source).concat(generateDemands(source, requires));
+  character.demands.excludes = character.demands.excludes.filter(demand => demand.source !== source).concat(generateDemands(source, excludes));
+  character.demands.requires = character.demands.requires.filter(demand => demand.source !== source).concat(generateDemands(source, requires));
 }
 
 function generateDemands(source, items = null) {
@@ -388,7 +402,7 @@ class MetatypePanel extends React.PureComponent {
     let metaPrio = character.prioritiesData.find((element) => {
       return (element.key === "meta");
     });
-    let metatypes = getMetatypes({id: 0, name: "Metahuman"}, metaPrio);
+    let metatypes = getMetatypes({id: 0, name: "Metahuman"}, metaPrio, character.demands);
 
     updateCharacter({
       metatypecategory: {id: 0, name: "Metahuman"},
