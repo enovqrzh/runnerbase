@@ -18,7 +18,7 @@ import AttributeRow from './AttributeRow'
 
 import gameOptions from './data/gameplayoptions'
 
-var character = {};
+var character = { excludes: [], requires: [] };
 
 function updateCharacter(elements) {
   character = Object.assign(character, elements);
@@ -27,6 +27,39 @@ function updateCharacter(elements) {
     character.updateRemaining();
   }
   console.log(character);
+}
+
+// TODO: Apply demands
+function updateDemands(source, excludes = null, requires = null) {
+  character.excludes = character.excludes.filter(demand => demand.source !== source).concat(generateDemands(source, excludes));
+  character.requires = character.requires.filter(demand => demand.source !== source).concat(generateDemands(source, requires));
+}
+
+function generateDemands(source, items = null) {
+  let demands = [];
+
+  if (items) {
+    if (items.hasOwnProperty('oneof')) {
+      Object.entries(items.oneof).forEach(pair => {
+        if (Array.isArray(pair[1])) {
+          demands.concat(pair[1].map(item => {
+            return new rbDemand(source, pair[0], item);
+          }));
+        } else {
+          demands.push(new rbDemand(source, pair[0], pair[1]));
+        }
+      });
+    }
+  }
+  return demands;
+}
+
+class rbDemand {
+  constructor(source, target, item) {
+    this.source = source;
+    this.target = target;
+    this.item = item;
+  }
 }
 
 class CharacterSheet extends React.PureComponent {
@@ -309,13 +342,19 @@ class TalentSelPanel extends React.Component {
   }
 
   updateCharacterTalent(talent) {
-    // TODO: Qualities, excludes, skill selection, spells/complexforms
+    // TODO: Qualities, skill selection, spells/complexforms
     // TODO: Refund the special attribute points if Mundane / a different talent is selected
-
-    updateCharacter({
+    let updateObj = {
       talent: talent,
       prioritytalent: talent.value,
-    });
+    };
+
+    updateCharacter(updateObj);
+    updateDemands(
+      'talent',
+      talent.hasOwnProperty('forbidden') ? talent.forbidden : null,
+      talent.hasOwnProperty('required') ? talent.required : null
+    );
   }
 
   render() {
