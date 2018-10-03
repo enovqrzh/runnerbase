@@ -25,7 +25,7 @@ class AttributeRow extends React.PureComponent {
       karmaMax--;
     }
 
-    let unaugmentedTotal = this.props.attr.base + this.props.attr.karma + this.props.attr.metatypemin;
+    const unaugmentedTotal = this.props.attr.base + this.props.attr.karma + this.props.attr.metatypemin;
     if (this.props.attrPtsRemaining < (this.props.attr.metatypemin + attrMax - unaugmentedTotal)) {
       attrMax = unaugmentedTotal + this.props.attrPtsRemaining - this.props.attr.metatypemin;
     }
@@ -55,8 +55,8 @@ class AttributeRow extends React.PureComponent {
             id={this.props.attr.key + 'Attr'}
             min="0"
             value={this.props.attr.base}
-            max={attrMax === 0 ? null : attrMax}
-            disabled={(attrMax === 0)}
+            max={attrMax <= 0 ? null : attrMax}
+            disabled={(attrMax <= 0)}
             onValueChange={this.handleAttrPtValueChange}
             intent={attrIntent}
           />
@@ -67,8 +67,8 @@ class AttributeRow extends React.PureComponent {
             id={this.props.attr.key + 'Karma'}
             min="0"
             value={this.props.attr.karma}
-            max={karmaMax === 0 ? null : karmaMax}
-            disabled={(karmaMax === 0)}
+            max={karmaMax <= 0 ? null : karmaMax}
+            disabled={(karmaMax <= 0)}
             onValueChange={this.handleKarmaValueChange}
             intent={karmaIntent}
           />
