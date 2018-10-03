@@ -46,10 +46,10 @@ class Metatype extends React.Component {
     const excludes = demands.getDemandValues('excludes', 'metatypecategory');
     const requires = demands.getDemandValues('requires', 'metatypecategory');
 
-    return metatypeCategories.filter(cat => {
+    return metatypeCategories.filter(cat => (
       (! excludes.includes(cat.name)) &&
       ((requires.length === 0) || requires.includes(cat.name))
-    });
+    ));
   }
 
   getMetavariants(metatype, metaPrio, demands) {
@@ -143,7 +143,6 @@ class Metatype extends React.Component {
           <FormGroup
             label="Metatype Category"
             labelFor="MetatypeCategory"
-            intent={catIntent}
           >
             <Select
               id="MetatypeCategory"
@@ -152,14 +151,13 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleCategoryValueChange}
             >
-              <Button text={this.state.category.name} rightIcon="double-caret-vertical" />
+              <Button text={this.state.category.name} rightIcon="double-caret-vertical" intent={catIntent} />
             </Select>
           </FormGroup>
 
           <FormGroup
             label="Metatype"
             labelFor="Metatype"
-            intent={typeIntent}
           >
             <Select
               id="Metatype"
@@ -168,14 +166,13 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetatypeValueChange}
             >
-              <Button text={this.state.metatype.name} rightIcon="double-caret-vertical" />
+              <Button text={this.state.metatype.name} rightIcon="double-caret-vertical" intent={typeIntent} />
             </Select>
           </FormGroup>
 
           <FormGroup
             label="Metavariant"
             labelFor="Metavariant"
-            intent={variantIntent}
           >
             <Select
               id="Metavariant"
@@ -184,7 +181,7 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetavariantValueChange}
             >
-              <Button text={this.state.metavariant.name} rightIcon="double-caret-vertical" />
+              <Button text={this.state.metavariant.name} rightIcon="double-caret-vertical" intent={variantIntent} />
             </Select>
           </FormGroup>
         </ControlGroup>
