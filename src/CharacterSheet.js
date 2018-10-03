@@ -348,19 +348,20 @@ class TalentSelPanel extends React.Component {
 
   updateTalent(talent) {
     // TODO: Skill selection
-    this.setState({
-      talent: talent
-    });
+    if (talent !== this.state.talent) {
+      this.setState({
+        talent: talent
+      });
 
-    this.updateCharacterTalent(talent);
+      this.updateCharacterTalent(talent);
+    }
   }
 
   updateCharacterTalent(talent) {
     // TODO: Qualities, skill selection, spells/complexforms
-    // TODO: Refund the special attribute points if Mundane / a different talent is selected
     let updateObj = {
       talent: talent,
-      prioritytalent: talent.value,
+      prioritytalent: talent.value
     };
 
     updateCharacter(updateObj);
