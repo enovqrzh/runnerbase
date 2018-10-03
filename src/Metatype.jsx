@@ -14,7 +14,7 @@ class Metatype extends React.Component {
     let metaPrio = this.props.origCharacter.prioritiesData.find((element) => {
       return (element.key === "meta");
     });
-    let metatypeCategories = this.getMetatypeCategories(metaPrio);
+    let metatypeCategories = this.getMetatypeCategories(metaPrio, this.props.origCharacter.demands);
 
     metatypes = getMetatypes(this.props.origCharacter.metatypecategory, metaPrio, this.props.origCharacter.demands);
     this.state = {
@@ -22,7 +22,7 @@ class Metatype extends React.Component {
       categoryTypes: metatypes,
       metatype: this.props.origCharacter.metatype,
       metavariant: this.props.origCharacter.metavariant ? this.props.origCharacter.metavariant : this.props.origCharacter.metatype,
-      metatypeVariants: this.getMetavariants(this.props.origCharacter.metatype, metaPrio),
+      metatypeVariants: this.getMetavariants(this.props.origCharacter.metatype, metaPrio, this.props.origCharacter.demands),
       metaPrio: metaPrio
     };
 
@@ -33,24 +33,26 @@ class Metatype extends React.Component {
     this.handleMetavariantValueChange = this.handleMetavariantValueChange.bind(this);
   }
 
-  getMetatypeCategories(metaPrio) {
+  getMetatypeCategories(metaPrio, demands) {
     let metatypeCategories = [
       {id: 0, name: "Metahuman"}
     ];
 
-    if (['A,4', 'B,3', 'C,2'].includes(metaPrio.value) ) {
+    if (['A,4', 'B,3', 'C,2'].includes(metaPrio.value)) {
       metatypeCategories.push({id: 1, name: "Metasapient"});
       metatypeCategories.push({id: 2, name: "Shapeshifter"});
     }
 
-    // TODO: Filter from demands
+    const excludes = demands.getDemandValues('excludes', 'metatypecategory');
+    const requires = demands.getDemandValues('requires', 'metatypecategory');
 
-    return metatypeCategories;
+    return metatypeCategories.filter(cat => {
+      (! excludes.includes(cat.name)) &&
+      ((requires.length === 0) || requires.includes(cat.name))
+    });
   }
 
-  getMetavariants(metatype, metaPrio) {
-    // TODO: Filter from demands
-
+  getMetavariants(metatype, metaPrio, demands) {
     let metavariants = [];
     if (metatype.hasOwnProperty('metavariants')) {
       if (Array.isArray(metatype.metavariants.metavariant)) {
@@ -60,9 +62,20 @@ class Metatype extends React.Component {
       }
     }
 
-    metavariants.filter(metavariant => metaPrio.allowedMetavariants.includes(metavariant.name));
+    const excludes = demands.getDemandValues('excludes', 'metavariant');
+    const requires = demands.getDemandValues('requires', 'metavariant');
 
-    metavariants.unshift(metatype);
+    metavariants.filter(metavariant => (
+      metaPrio.allowedMetavariants.includes(metavariant.name) &&
+      (! excludes.includes(metavariant.name)) &&
+      ((requires.length === 0) || requires.includes(metavariant.name))
+    ));
+
+    // If a metavariant is required, it's not going to match this metatype we tack onto the list of metavariants
+    if (requires.length === 0) {
+      metavariants.unshift(metatype);
+    }
+
     metavariants = metavariants.map((m, index) => {
       m.id = m.name;
       return m;
@@ -73,21 +86,20 @@ class Metatype extends React.Component {
 
   handleCategoryValueChange(item) {
     // If the category actually changed, reset the metatype select
-
-    // TODO: Don't change metatype and variant if their option array comes back empty
     if (this.state.category !== item) {
-      let metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.state.metaPrio, this.props.origCharacter.demands);
+      const metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.state.metaPrio, this.props.origCharacter.demands);
+
       this.setState({
         category: item,
         categoryTypes: metatypes,
-        metatype: metatypes[0],
-        metatypeVariants: this.getMetavariants(metatypes[0], this.state.metaPrio),
-        metavariant: metatypes[0]
+        metatype: (metatypes.length === 0) ? this.state.metatype : metatypes[0],
+        metatypeVariants: this.getMetavariants(metatypes[0], this.state.metaPrio, this.props.origCharacter.demands),
+        metavariant: (metatypes.length === 0) ? this.state.metatype : metatypes[0]
       });
 
       this.props.characterUpdate({
         metatypecategory: item,
-        metatype: metatypes[0],
+        metatype: (metatypes.length === 0) ? this.state.metatype : metatypes[0],
         metavariant: null
       });
     }
@@ -98,7 +110,7 @@ class Metatype extends React.Component {
     if (this.state.metatype !== item) {
       this.setState({
         metatype: item,
-        metatypeVariants: this.getMetavariants(item, this.state.metaPrio),
+        metatypeVariants: this.getMetavariants(item, this.state.metaPrio, this.props.origCharacter.demands),
         metavariant: item
       });
       this.props.characterUpdate({
@@ -131,6 +143,7 @@ class Metatype extends React.Component {
           <FormGroup
             label="Metatype Category"
             labelFor="MetatypeCategory"
+            intent={catIntent}
           >
             <Select
               id="MetatypeCategory"
@@ -139,13 +152,14 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleCategoryValueChange}
             >
-              <Button text={this.state.category.name} rightIcon="double-caret-vertical" intent={catIntent} />
+              <Button text={this.state.category.name} rightIcon="double-caret-vertical" />
             </Select>
           </FormGroup>
 
           <FormGroup
             label="Metatype"
             labelFor="Metatype"
+            intent={typeIntent}
           >
             <Select
               id="Metatype"
@@ -154,13 +168,14 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetatypeValueChange}
             >
-              <Button text={this.state.metatype.name} rightIcon="double-caret-vertical" intent={typeIntent} />
+              <Button text={this.state.metatype.name} rightIcon="double-caret-vertical" />
             </Select>
           </FormGroup>
 
           <FormGroup
             label="Metavariant"
             labelFor="Metavariant"
+            intent={variantIntent}
           >
             <Select
               id="Metavariant"
@@ -169,7 +184,7 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetavariantValueChange}
             >
-              <Button text={this.state.metavariant.name} rightIcon="double-caret-vertical" intent={variantIntent} />
+              <Button text={this.state.metavariant.name} rightIcon="double-caret-vertical" />
             </Select>
           </FormGroup>
         </ControlGroup>
