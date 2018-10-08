@@ -79,7 +79,7 @@ class rbDemand {
 class CharacterSheet extends React.PureComponent {
   render() {
     return (
-      <div id="characterSheet" className={Classes.DARK}>
+      <div id="rb-character-sheet" className={Classes.DARK}>
         <H1>Character Sheet!:</H1>
         <CharacterTabs>
           <Tab id="biotab" title="Bio" panel={<BioPanel />} />
