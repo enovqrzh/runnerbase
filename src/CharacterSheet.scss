@@ -91,6 +91,47 @@ table#rb-attr-table td div {
   display: inline-flex;
 }
 
+// Skill table
+table#rb-skill-table thead th {
+  position: sticky;
+  top: 0px;
+  box-shadow: inset -1px -2px 0 0 $pt-dark-divider-white;
+  z-index: 2;
+}
+
+table#rb-skill-table thead th:first-child {
+  padding-top: 3px;
+  padding-bottom: 4px;
+}
+
+table#rb-skill-table tbody th div {
+  display: inline-flex;
+  position: sticky;
+  top: 46px;
+  z-index: 1;
+}
+
+table#rb-skill-table th:first-child {
+  text-align: center;
+}
+
+table#rb-skill-table tr.rb-skill-table-section-top:not(:first-child) > * {
+  border-top: 2px solid $dark-gray5;
+}
+
+table#rb-skill-table td {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+table#rb-skill-table td.rb-skill-table-numeric,
+table#rb-skill-table th.rb-skill-table-numeric {
+  text-align: center;
+}
+
+table#rb-skill-table tbody tr th,
+table#rb-skill-table tbody tr td {
+  box-shadow: inset -1px 1px 0 0 $pt-dark-divider-white;
 }
 
 // Priority Selection

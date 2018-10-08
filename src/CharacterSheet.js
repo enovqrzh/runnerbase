@@ -1,10 +1,11 @@
 import React from 'react';
 import './CharacterSheet.css';
 
-import { Button, Callout, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLTable, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Callout, Classes, Dialog, EditableText, FormGroup, H1, H2, HTMLSelect, HTMLTable, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 
 import update from 'immutability-helper';
+import { v4 as uuid } from 'uuid';
 
 import renderMenuItem from './renderMenuItem';
 import PrioritySelector from './PrioritySelector';
@@ -17,6 +18,9 @@ import getMetatypes from './getMetatypes';
 import AttributeRow from './AttributeRow'
 
 import gameOptions from './data/gameplayoptions'
+
+import skills from './skills'
+import SkillRow from './SkillRow'
 
 var character = {
   demands: {
@@ -88,6 +92,7 @@ class CharacterSheet extends React.PureComponent {
           <Tab id="talentsel" title="Talent" panel={<TalentSelPanel />} />
           <Tab id="metatypesel" title="Metatype" panel={<MetatypePanel />} />
           <Tab id="attr" title="Attributes" panel={<AttrPanel />} />
+          <Tab id="skills" title="Skills" panel={<SkillPanel />} />
         </CharacterTabs>
       </div>
     );
@@ -480,6 +485,7 @@ class AttrPanel extends React.Component {
       }
     }
 
+    // TODO: What happens if the metatype is currently failing vs. the priority?
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
     const attrPrio = character.prioritiesData.find((element) => {
       return (element.key === "attr");
@@ -546,6 +552,7 @@ class AttrPanel extends React.Component {
         } else {
           updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
         }
+        // TODO: Change karma cost for any points purchased through karma
       } else {
         updateObj.karmaRemaining = this.state.karmaRemaining;
         if (diff > 0) {
@@ -608,6 +615,146 @@ class AttrPanel extends React.Component {
           ))}
         </tbody>
       </HTMLTable>
+    );
+  }
+}
+
+class SkillPanel extends React.Component {
+  constructor(props) {
+    super(props);
+
+    let attrValues = {};
+    character.attributes.forEach(attr => {
+      attrValues[attr.key] = attr.totalvalue;
+    });
+
+    const skillPrio = character.prioritiesData.find(element => { return element.key === "skills"; });
+    let skillPtsRemaining = skillPrio.skills;
+
+    character.skills.forEach(skill => {
+      skillPtsRemaining = skillPtsRemaining - skill.base;
+    });
+
+    this.state = {
+      skills: character.skills,
+      attrValues: attrValues,
+      groupBy: 'category',
+      groupOpts: {
+        skillgroup: { groups: skills.groups.concat(['-']), label: "Skill Group", value: 'skillgroup' },
+        category: { groups: skills.activeCategories, label: "Category", value: 'category' },
+        attrName: { groups: character.attributes.map(attr => { return attr.name; }), label: "Attribute", value: 'attrName' }
+      },
+      skillPtsRemaining: skillPtsRemaining
+    };
+
+    this.updateGroupBy = this.updateGroupBy.bind(this);
+    this.updateSkill = this.updateSkill.bind(this);
+  }
+
+  initPanel() {
+    updateCharacter({ skills: skills.activeSkills.map(skill => {
+      return Object.assign(skill, {
+        suid: skill.id,
+        guid: uuid(),
+        karma: 0,
+        base: 0
+      });
+    })});
+  }
+
+  updateSkill(guid, value, type) {
+    const i = this.state.skills.findIndex(skill => skill.guid === guid);
+    const diff = value - this.state.skills[i][type];
+
+    if (diff !== 0) {
+      const skillsUpdate = update(this.state.skills, {[i]: {
+        [type]: {$set: value}
+      }});
+      let stateUpdate = { skills: skillsUpdate };
+      let charUpdate = { skills: skillsUpdate };
+
+      if (type === 'base') {
+        stateUpdate.skillPtsRemaining = this.state.skillPtsRemaining - diff;
+        // TODO: Change karma cost for any points purchased through karma
+      } else {
+        charUpdate.karmaRemaining = character.karmaRemaining;
+
+        if (diff > 0) {
+          const oldRating = this.state.skills[i].base + this.state.skills[i].karma;
+          for (let j = 1; j <= diff; j++) {
+            charUpdate.karmaRemaining = charUpdate.karmaRemaining - ((oldRating + j) * 2);
+          }
+        } else {
+          const newRating = skillsUpdate[i].base + skillsUpdate[i].karma;
+          for (let j = 1; j <= (diff * -1); j++) {
+            charUpdate.karmaRemaining = charUpdate.karmaRemaining + ((newRating + j) * 2);
+          }
+        }
+      }
+
+      updateCharacter(charUpdate);
+      this.setState(stateUpdate);
+    }
+  }
+
+  updateGroupBy(event) {
+    this.setState({ groupBy: event.currentTarget.value });
+  }
+
+  render() {
+    // TODO: Skill groups
+    // TODO: Grouping select
+    // TODO: Filter box for skill table
+    // TODO: Actually set values for skills
+    // TODO: Tooltips
+    // TODO: Specializations
+
+    const sortedSkills = this.state.groupOpts[this.state.groupBy].groups.map(group => {
+      return this.state.skills.filter(skill => (
+        skill[this.state.groupBy] === group &&
+        this.state.attrValues.hasOwnProperty(skill.attribute) &&
+        this.state.attrValues[skill.attribute] !== 0
+      )).sort((a, b) => { return a.name.localeCompare(b.name); });
+    }).filter(items => (items.length > 0));
+
+    return (
+      <React.Fragment>
+        <Callout>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
+        <HTMLTable id="rb-skill-table" className="rb-table" bordered={true}>
+          <thead>
+            <tr>
+              <th>
+                <HTMLSelect
+                  options={Object.values(this.state.groupOpts)}
+                  value={this.state.groupBy}
+                  onChange={this.updateGroupBy}
+                />
+              </th>
+              <th>Name</th>
+              {['skillgroup', 'category', 'attrName'].filter(col => (col !== this.state.groupBy)).map(col => (<th key={col}>{this.state.groupOpts[col].label}</th>))}
+              <th className="rb-skill-table-numeric">Base Points</th>
+              <th className="rb-skill-table-numeric">From Karma</th>
+              <th className="rb-skill-table-numeric">Total Dice (Rating)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedSkills.map(group => {
+              const totalSkills = group.length;
+              return group.map((skill, index) => (
+                <SkillRow
+                  skill={skill}
+                  key={skill.guid}
+                  attrValue={this.state.attrValues[skill.attribute]}
+                  index={index}
+                  skillsInCollection={totalSkills}
+                  groupBy={this.state.groupBy}
+                  updateSkill={this.updateSkill}
+                />
+              ));
+            })}
+          </tbody>
+        </HTMLTable>
+      </React.Fragment>
     );
   }
 }
