@@ -568,7 +568,7 @@ class AttrPanel extends React.Component {
     let attrAtMax = this.state.attributes.find(attr => ( (attr.metatypemin + attr.base + attr.karma) === attr.metatypemax ));
 
     return (
-      <HTMLTable id="rb-attr-table" bordered={true}>
+      <HTMLTable id="rb-attr-table" className="rb-table" bordered={true}>
         <thead>
           <tr>
             <th>Attribute Name</th>
@@ -579,9 +579,9 @@ class AttrPanel extends React.Component {
           </tr>
         </thead>
         <tbody>
-          <tr className="rb-table-header2">
-            <th colSpan="3">Physical and Mental Attributes</th>
-            <th colSpan="2" className="rb-points-remaining"><span>Points Remaining:</span> {this.state.attrPtsRemaining}</th>
+          <tr>
+            <th className="rb-table-header2" colSpan="3">Physical and Mental Attributes</th>
+            <th colSpan="2" className="rb-table-header2 rb-points-remaining"><span>Points Remaining:</span> {this.state.attrPtsRemaining}</th>
           </tr>
           {this.state.attributes.filter(attr => (! attr.special)).map(attr => (
             <AttributeRow
@@ -593,9 +593,9 @@ class AttrPanel extends React.Component {
               updateAttr={this.updateAttr}
             />
           ))}
-          <tr className="rb-table-header2">
-            <th colSpan="3">Special Attributes</th>
-            <th colSpan="2" className="rb-points-remaining"><span>Points Remaining:</span> {this.state.specialPtsRemaining}</th>
+          <tr>
+            <th className="rb-table-header2" colSpan="3">Special Attributes</th>
+            <th colSpan="2" className="rb-table-header2 rb-points-remaining"><span>Points Remaining:</span> {this.state.specialPtsRemaining}</th>
           </tr>
           {this.state.attributes.filter(attr => attr.special).map(attr => (
             <AttributeRow

@@ -31,17 +31,35 @@ div#metatypegroup > div {
   margin-right: 15px;
 }
 
-table#rb-attr-table {
+// All tables
+table.rb-table {
   border-collapse: collapse;
 }
 
-table#rb-attr-table thead th {
+table.rb-table thead th {
   background-color: $dark-gray1;
   padding-top: 6px;
   padding-bottom: 6px;
+  border-bottom: 1px solid $dark-gray5;
 }
 
-table#rb-attr-table tbody tr.rb-table-header2 th {
+table.rb-table tbody th.rb-table-header2 {
+  background-color: $dark-gray2;
+}
+
+table.rb-table th,
+table.rb-table td {
+  vertical-align: middle;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+table.rb-table input.bp3-input {
+  width: 50px;
+}
+
+// Attribute Table
+table#rb-attr-table tbody tr th.rb-table-header2 {
   box-shadow: unset;
   border-top: 1px solid $dark-gray5;
   border-bottom: 1px solid $dark-gray5;
@@ -49,15 +67,11 @@ table#rb-attr-table tbody tr.rb-table-header2 th {
   padding-left: 33px;
   padding-right: 11px;
   padding-bottom: 6px;
-  background-color: $dark-gray2;
 }
 
 table#rb-attr-table td {
-  vertical-align: middle;
   padding-left: 44px;
   padding-right: 44px;
-  padding-top: 3px;
-  padding-bottom: 3px;
 }
 
 table#rb-attr-table thead th,
@@ -77,10 +91,9 @@ table#rb-attr-table td div {
   display: inline-flex;
 }
 
-div.attrInput input.bp3-input {
-  width: 50px;
 }
 
+// Priority Selection
 div.rb-priority-selector {
   width: 125px;
   display: inline-block;

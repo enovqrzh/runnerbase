@@ -51,7 +51,6 @@ class AttributeRow extends React.PureComponent {
         <td>{this.props.attr.metatypemin} / {this.props.attr.metatypemax}</td>
         <td>
           <NumericInput
-            className="attrInput"
             id={this.props.attr.key + 'Attr'}
             min="0"
             value={this.props.attr.base}
@@ -63,7 +62,6 @@ class AttributeRow extends React.PureComponent {
         </td>
         <td>
           <NumericInput
-            className="attrInput"
             id={this.props.attr.key + 'Karma'}
             min="0"
             value={this.props.attr.karma}
