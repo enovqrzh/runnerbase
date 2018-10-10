@@ -450,6 +450,7 @@ class AttrPanel extends React.Component {
 
     // Reset the max, min, and total for attributes in case metatype changed
     this.setAttrsMMT(character.attributes);
+
     this.state = {
       attributes: character.attributes,
       attrPtsRemaining: character.attrPtsRemaining,
@@ -470,7 +471,7 @@ class AttrPanel extends React.Component {
       { name: "Intuition", key: "int", base: 0, karma: 0, augmodifier: 0, special: false },
       { name: "Logic", key: "log", base: 0, karma: 0, augmodifier: 0, special: false },
       { name: "Willpower", key: "wil", base: 0, karma: 0, augmodifier: 0, special: false },
-      { name: "Edge", key: "edg", base: 0, karma: 0, augmodifier: 0, special: true}
+      { name: "Edge", key: "edg", base: 0, karma: 0, augmodifier: 0, special: true }
     ];
 
     this.setAttrsMMT(attrs);
@@ -479,30 +480,33 @@ class AttrPanel extends React.Component {
   setAttrsMMT(attrs) {
     let meta = character.metavariant ? character.metavariant : character.metatype;
 
+    function addSpecialAttr(key, attrs) {
+      const specAttrs = {
+        'mag': { name: 'Magic', type: 'magic' },
+        'res': { name: 'Resonance', type: 'resonance' },
+        'dep': { name: 'Depth', type: 'depth' }
+      };
+      const otherAttrs = update(specAttrs, {$unset: [ key ]});
+
+      attrs = attrs.filter(attr => { return (! Object.getOwnPropertyNames(otherAttrs).includes(attr.key)); });
+      const i = attrs.findIndex(attr => { return attr.key === key; });
+      if ( i === -1 ) {
+        attrs.push({ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] });
+      } else {
+        attrs[i].talentMin = character.talent[specAttrs[key].type];
+      }
+
+      // TODO: Recalculate any karma spent
+
+      return attrs;
+    }
+
     if (character.talent.hasOwnProperty('magic')) {
-      attrs = attrs.filter(attr => {return ((attr.key !== 'res') && (attr.key !== 'dep'))});
-      const i = attrs.findIndex(attr => {return attr.key === 'mag';});
-      if ( i === -1 ) {
-        attrs.push({ name: "Magic", key: "mag", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.magic });
-      } else {
-        attrs[i].talentMin = character.talent.magic;
-      }
+      attrs = addSpecialAttr('mag', attrs);
     } else if (character.talent.hasOwnProperty('resonance')) {
-      attrs = attrs.filter(attr => {return ((attr.key !== 'mag') && (attr.key !== 'dep'))});
-      const i = attrs.findIndex(attr => {return attr.key === 'res';});
-      if ( i === -1 ) {
-        attrs.push({ name: "Resonance", key: "res", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.resonance });
-      } else {
-        attrs[i].talentMin = character.talent.resonance;
-      }
+      attrs = addSpecialAttr('res', attrs);
     } else if (character.talent.hasOwnProperty('depth')) {
-      attrs = attrs.filter(attr => {return ((attr.key !== 'res') && (attr.key !== 'mag'))});
-      const i = attrs.findIndex(attr => {return attr.key === 'dep';});
-      if ( i === -1 ) {
-        attrs.push({ name: "Depth", key: "dep", base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent.depth });
-      } else {
-        attrs[i].talentMin = character.talent.depth;
-      }
+      attrs = addSpecialAttr('dep', attrs);
     }
 
     // TODO: What happens if the metatype is currently failing vs. the priority?
@@ -541,6 +545,9 @@ class AttrPanel extends React.Component {
       attr.metatypemax = Number(meta[attr.key + "max"]);
       attr.metatypeaugmax = Number(meta[attr.key + "aug"]);
       attr.totalvalue = attr.metatypemin + attr.base + attr.karma;
+
+      // TODO: Update karma costs
+
       return attr;
     });
 
