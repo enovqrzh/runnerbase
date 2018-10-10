@@ -424,6 +424,26 @@ class MetatypePanel extends React.PureComponent {
   }
 }
 
+function karmaCostRecalc(oldItem, newItem, factor) {
+  let karmaRemaining = character.karmaRemaining;
+
+  if (oldItem.karma > 0) {
+    const base = oldItem.base + (oldItem.hasOwnProperty('metatypemin') ? oldItem.metatypemin : null);
+    for (let j = base + 1; j <= (base + oldItem.karma); j++) {
+      karmaRemaining = karmaRemaining + (j * factor);
+    }
+  }
+
+  if (newItem.karma > 0) {
+    const base = newItem.base + (newItem.hasOwnProperty('metatypemin') ? newItem.metatypemin : null);
+    for (let j = base + 1; j <= (base + newItem.karma); j++) {
+      karmaRemaining = karmaRemaining - (j * factor);
+    }
+  }
+
+  return karmaRemaining;
+}
+
 class AttrPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -538,13 +558,14 @@ class AttrPanel extends React.Component {
   updateAttr(key, value, type = 'base') {
     let i = this.state.attributes.findIndex(attr => attr.key === key);
     let diff = value - this.state.attributes[i][type];
+
     if (diff !== 0) {
-      let attrs = update(this.state.attributes, {[i]: {
+      let attrsUpdate = update(this.state.attributes, {[i]: {
         [type]: {$set: value},
         totalvalue: {$apply: function(x) { return x + diff }}
       }});
 
-      let updateObj = { attributes: attrs };
+      let updateObj = { attributes: attrsUpdate };
 
       if (type === 'base') {
         if (this.state.attributes[i].special) {
@@ -552,19 +573,8 @@ class AttrPanel extends React.Component {
         } else {
           updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
         }
-        // TODO: Change karma cost for any points purchased through karma
-      } else {
-        updateObj.karmaRemaining = this.state.karmaRemaining;
-        if (diff > 0) {
-          for (let j = 1; j <= diff; j++) {
-            updateObj.karmaRemaining = updateObj.karmaRemaining - ((this.state.attributes[i].totalvalue + j) * 5);
-          }
-        } else {
-          for (let j = 1; j <= (diff * -1); j++) {
-            updateObj.karmaRemaining = updateObj.karmaRemaining + ((attrs[i].totalvalue + j) * 5);
-          }
-        }
       }
+      updateObj.karmaRemaining = karmaCostRecalc(this.state.attributes[i], attrsUpdate[i], 5);
 
       updateCharacter(updateObj);
       this.setState(updateObj);
@@ -675,22 +685,8 @@ class SkillPanel extends React.Component {
 
       if (type === 'base') {
         stateUpdate.skillPtsRemaining = this.state.skillPtsRemaining - diff;
-        // TODO: Change karma cost for any points purchased through karma
-      } else {
-        charUpdate.karmaRemaining = character.karmaRemaining;
-
-        if (diff > 0) {
-          const oldRating = this.state.skills[i].base + this.state.skills[i].karma;
-          for (let j = 1; j <= diff; j++) {
-            charUpdate.karmaRemaining = charUpdate.karmaRemaining - ((oldRating + j) * 2);
-          }
-        } else {
-          const newRating = skillsUpdate[i].base + skillsUpdate[i].karma;
-          for (let j = 1; j <= (diff * -1); j++) {
-            charUpdate.karmaRemaining = charUpdate.karmaRemaining + ((newRating + j) * 2);
-          }
-        }
       }
+      charUpdate.karmaRemaining = karmaCostRecalc(this.state.skills[i], skillsUpdate[i], 2);
 
       updateCharacter(charUpdate);
       this.setState(stateUpdate);
