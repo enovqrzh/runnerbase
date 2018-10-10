@@ -424,6 +424,14 @@ class MetatypePanel extends React.PureComponent {
   }
 }
 
+/**
+ * Recalculate the karma cost for points for a given attribute or skill
+ *
+ * @param  {object} oldItem  The previous state of the item
+ * @param  {object} newItem  The new state of the item
+ * @param  {numeric} factor  The factor by which point totals are multiplied to get karma cost
+ * @return {numeric}         The karma remaining
+ */
 function karmaCostRecalc(oldItem, newItem, factor) {
   let karmaRemaining = character.karmaRemaining;
 
