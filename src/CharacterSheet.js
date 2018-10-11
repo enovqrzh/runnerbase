@@ -457,14 +457,10 @@ class AttrPanel extends React.Component {
     super(props);
 
     // Reset the max, min, and total for attributes in case metatype changed
-    this.setAttrsMMT(character.attributes);
+    const updateObj = this.setAttrsMMT(character.attributes);
+    updateCharacter({ attributes: updateObj.attributes });
 
-    this.state = {
-      attributes: character.attributes,
-      attrPtsRemaining: character.attrPtsRemaining,
-      specialPtsRemaining: character.specialPtsRemaining,
-      karmaRemaining: character.karmaRemaining
-    };
+    this.state = update(updateObj, { $unset: ['karmaRemaining'] })
 
     this.updateAttr = this.updateAttr.bind(this);
   }
@@ -482,11 +478,17 @@ class AttrPanel extends React.Component {
       { name: "Edge", key: "edg", base: 0, karma: 0, augmodifier: 0, special: true }
     ];
 
-    this.setAttrsMMT(attrs);
+    const updateObj = this.setAttrsMMT(attrs);
+    updateCharacter({ attributes: updateObj.attributes });
   }
 
-  setAttrsMMT(attrs) {
-    let meta = character.metavariant ? character.metavariant : character.metatype;
+  /**
+   * Set minimums, maximums and totals for attributes, and add special attributes from talent
+   * @param {Array} oldAttrs  The starting array of character attributes
+   * @return {Object}         An object with state / character properties to update
+   */
+  setAttrsMMT(oldAttrs) {
+    let newAttrs = Object.assign(oldAttrs, {});
 
     function addSpecialAttr(key, attrs) {
       const specAttrs = {
@@ -501,24 +503,25 @@ class AttrPanel extends React.Component {
       if ( i === -1 ) {
         attrs.push({ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] });
       } else {
-        attrs[i].talentMin = character.talent[specAttrs[key].type];
+        attrs = update(attrs, {[i]: {talentMin: {$set: character.talent[specAttrs[key].type]}}});
       }
 
       // TODO: Recalculate any karma spent
-
       return attrs;
     }
 
     if (character.talent.hasOwnProperty('magic')) {
-      attrs = addSpecialAttr('mag', attrs);
+      newAttrs = addSpecialAttr('mag', newAttrs);
     } else if (character.talent.hasOwnProperty('resonance')) {
-      attrs = addSpecialAttr('res', attrs);
+      newAttrs = addSpecialAttr('res', newAttrs);
     } else if (character.talent.hasOwnProperty('depth')) {
-      attrs = addSpecialAttr('dep', attrs);
+      newAttrs = addSpecialAttr('dep', newAttrs);
     }
+    // TODO: Refund karma if old attribute object has a special attribute that is no longer present
 
     // TODO: What happens if the metatype is currently failing vs. the priority?
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
+    const meta = character.metavariant ? character.metavariant : character.metatype;
     const attrPrio = character.prioritiesData.find((element) => {
       return (element.key === "attr");
     });
@@ -541,25 +544,26 @@ class AttrPanel extends React.Component {
             return (element.name === character.metavariant.name);
           });
 
-    let state = {
+    let ptsRemaining = {
       attrPtsRemaining: attrPrio.attributes,
       specialPtsRemaining: metavariantPrioItem.value
     };
 
-    attrs = attrs.map(attr => {
-      this.subtractPts(attr.base, attr.special, state);
+    newAttrs = newAttrs.map(attr => {
+      this.subtractPts(attr.base, attr.special, ptsRemaining);
 
-      attr.metatypemin = Number(attr.hasOwnProperty('talentMin') ? attr.talentMin : meta[attr.key + "min"]);
-      attr.metatypemax = Number(meta[attr.key + "max"]);
-      attr.metatypeaugmax = Number(meta[attr.key + "aug"]);
-      attr.totalvalue = attr.metatypemin + attr.base + attr.karma;
+      let newAttr = update(attr, {
+        metatypemin: {$set: Number(attr.hasOwnProperty('talentMin') ? attr.talentMin : meta[attr.key + "min"])},
+        metatypemax: {$set: Number(meta[attr.key + "max"])},
+        metatypeaugmax: {$set: Number(meta[attr.key + "aug"])}
+      });
+      newAttr = update(newAttr, {totalvalue: {$set: newAttr.metatypemin + newAttr.base + newAttr.karma}});
 
       // TODO: Update karma costs
-
-      return attr;
+      return newAttr;
     });
 
-    updateCharacter(Object.assign({ attributes: attrs }, state));
+    return Object.assign({ attributes: newAttrs }, ptsRemaining);
   }
 
   subtractPts(diff, special, state) {
@@ -592,7 +596,7 @@ class AttrPanel extends React.Component {
       updateObj.karmaRemaining = karmaCostRecalc(this.state.attributes[i], attrsUpdate[i], 5);
 
       updateCharacter(updateObj);
-      this.setState(updateObj);
+      this.setState(update(updateObj, {$unset: ['karmaRemaining']}));
     }
   }
 
