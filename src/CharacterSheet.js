@@ -378,7 +378,6 @@ class TalentSelPanel extends React.Component {
   }
 
   render() {
-    // TODO: Intent doesn't seem to work
     let talentIntent = null;
     if (! this.state.talentOptions.includes(this.state.talent)) {
       talentIntent = 'warning';
@@ -394,10 +393,9 @@ class TalentSelPanel extends React.Component {
           items={this.state.talentOptions}
           itemRenderer={renderMenuItem}
           filterable={false}
-          intent={talentIntent}
           onItemSelect={this.updateTalent}
         >
-          <Button text={this.state.talent.name} rightIcon="double-caret-vertical" />
+          <Button intent={talentIntent} text={this.state.talent.name} rightIcon="double-caret-vertical" />
         </Select>
       </FormGroup>
     );
