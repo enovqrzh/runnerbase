@@ -378,6 +378,7 @@ class TalentSelPanel extends React.Component {
   }
 
   render() {
+    // TODO: Intent doesn't seem to work
     let talentIntent = null;
     if (! this.state.talentOptions.includes(this.state.talent)) {
       talentIntent = 'warning';
@@ -458,7 +459,7 @@ class AttrPanel extends React.Component {
 
     // Reset the max, min, and total for attributes in case metatype changed
     const updateObj = this.setAttrsMMT(character.attributes);
-    updateCharacter({ attributes: updateObj.attributes });
+    updateCharacter({ attributes: updateObj.attributes, karmaRemaining: updateObj.karmaRemaining });
 
     this.state = update(updateObj, { $unset: ['karmaRemaining'] })
 
@@ -496,18 +497,23 @@ class AttrPanel extends React.Component {
         'res': { name: 'Resonance', type: 'resonance' },
         'dep': { name: 'Depth', type: 'depth' }
       };
-      const otherAttrs = update(specAttrs, {$unset: [ key ]});
+      const otherAttrs = Object.getOwnPropertyNames(update(specAttrs, {$unset: [ key ]}));
 
-      attrs = attrs.filter(attr => { return (! Object.getOwnPropertyNames(otherAttrs).includes(attr.key)); });
+      let updateAttrs = {};
+
       const i = attrs.findIndex(attr => { return attr.key === key; });
       if ( i === -1 ) {
-        attrs.push({ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] });
+        const oldSpec = attrs.find(attr => { return otherAttrs.includes(attr.key); });
+        if (oldSpec) {
+          updateCharacter({ karmaRemaining: karmaCostRecalc(oldSpec, { karma: 0 }, 5) });
+        }
+        updateAttrs = update(attrs, {$push: [{ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] }]});
       } else {
-        attrs = update(attrs, {[i]: {talentMin: {$set: character.talent[specAttrs[key].type]}}});
+        updateAttrs = update(attrs, {[i]: {talentMin: {$set: character.talent[specAttrs[key].type]}}});
       }
+      updateAttrs = updateAttrs.filter(attr => { return (! otherAttrs.includes(attr.key)); });
 
-      // TODO: Recalculate any karma spent
-      return attrs;
+      return updateAttrs;
     }
 
     if (character.talent.hasOwnProperty('magic')) {
@@ -516,38 +522,47 @@ class AttrPanel extends React.Component {
       newAttrs = addSpecialAttr('res', newAttrs);
     } else if (character.talent.hasOwnProperty('depth')) {
       newAttrs = addSpecialAttr('dep', newAttrs);
+    } else {
+      // Mundane, refund any karma previously spent on a special attr
+      const oldSpec = oldAttrs.find(attr => { return ['mag', 'res', 'dep'].includes(attr.key); });
+      if (oldSpec) {
+        updateCharacter({ karmaRemaining: karmaCostRecalc(oldSpec, { karma: 0 }, 5) });
+        newAttrs = newAttrs.filter(attr => { return (! ['mag', 'res', 'dep'].includes(attr.key)); });
+      }
     }
     // TODO: Refund karma if old attribute object has a special attribute that is no longer present
 
-    // TODO: What happens if the metatype is currently failing vs. the priority?
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
     const meta = character.metavariant ? character.metavariant : character.metatype;
-    const attrPrio = character.prioritiesData.find((element) => {
-      return (element.key === "attr");
-    });
-
-    const metaPrio = character.prioritiesData.find((element) => {
-      return (element.key === "meta");
-    });
+    const attrPrio = character.prioritiesData.find((element) => { return (element.key === "attr"); });
+    const metaPrio = character.prioritiesData.find((element) => { return (element.key === "meta"); });
 
     const metatypePrioItem = metaPrio.metatypes.metatype.find((element) => {
       return (element.name === character.metatype.name);
     });
 
-    const metavariantPrioItem = (! character.metavariant) ?
-        metatypePrioItem
-      :
-        (! Array.isArray(metatypePrioItem.metavariants.metavariant)) ?
-          metatypePrioItem.metavariants.metavariant
+    let specialPts = 0;
+
+    if (metatypePrioItem) {
+      const metavariantPrioItem = (! character.metavariant) ?
+          metatypePrioItem
         :
-          metatypePrioItem.metavariants.metavariant.find((element) => {
-            return (element.name === character.metavariant.name);
-          });
+          (! Array.isArray(metatypePrioItem.metavariants.metavariant)) ?
+            metatypePrioItem.metavariants.metavariant
+          :
+            metatypePrioItem.metavariants.metavariant.find((element) => {
+              return (element.name === character.metavariant.name);
+            });
+
+      specialPts = metavariantPrioItem.value;
+    }
 
     let ptsRemaining = {
       attrPtsRemaining: attrPrio.attributes,
-      specialPtsRemaining: metavariantPrioItem.value
+      specialPtsRemaining: specialPts
     };
+
+    let karmaDiff = 0;
 
     newAttrs = newAttrs.map(attr => {
       this.subtractPts(attr.base, attr.special, ptsRemaining);
@@ -559,11 +574,12 @@ class AttrPanel extends React.Component {
       });
       newAttr = update(newAttr, {totalvalue: {$set: newAttr.metatypemin + newAttr.base + newAttr.karma}});
 
-      // TODO: Update karma costs
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(attr, newAttr, 5));
+
       return newAttr;
     });
 
-    return Object.assign({ attributes: newAttrs }, ptsRemaining);
+    return Object.assign({ attributes: newAttrs, karmaRemaining: character.karmaRemaining - karmaDiff }, ptsRemaining);
   }
 
   subtractPts(diff, special, state) {
@@ -718,9 +734,7 @@ class SkillPanel extends React.Component {
 
   render() {
     // TODO: Skill groups
-    // TODO: Grouping select
     // TODO: Filter box for skill table
-    // TODO: Actually set values for skills
     // TODO: Tooltips
     // TODO: Specializations
 
