@@ -34,7 +34,8 @@ const skills = {
       attribute: skill.attribute.toLowerCase(),
       attrName: attrNames[skill.attribute],
       category: skill.category.slice(0, -7),
-      skillgroup: typeof(skill.skillgroup) === 'object' ? '-' : skill.skillgroup
+      skillgroup: typeof(skill.skillgroup) === 'object' ? '-' : skill.skillgroup,
+      default: (skill.default === "True")
     });
   }),
   knowledgeSkills: skillData.chummer.knowledgeskills.skill

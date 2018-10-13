@@ -17,8 +17,10 @@ class SkillRow extends React.PureComponent {
   }
 
   render() {
-    const rating = this.props.skill.base + this.props.skill.karma;
+    const rating = this.props.skill.base + this.props.skill.karma + this.props.skillGroupRating;
     const dice = rating === 0 ? this.props.attrValue - 1 : rating + this.props.attrValue;
+
+    const diceRating = ((rating === 0 && (! this.props.skill.default)) || dice === 0 )? ' - ' : dice + ' (' + rating + ')';
 
     return (
       <tr className={this.props.index === 0 ? "rb-skill-table-section-top" : null}>
@@ -39,7 +41,7 @@ class SkillRow extends React.PureComponent {
             onValueChange={this.updateSkillKarma}
           />
         </td>
-        <td className="rb-skill-table-numeric">{dice} ({rating})</td>
+        <td className="rb-skill-table-numeric">{diceRating}</td>
       </tr>
     )
   }
