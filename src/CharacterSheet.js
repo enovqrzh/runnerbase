@@ -21,6 +21,7 @@ import gameOptions from './data/gameplayoptions'
 
 import skills from './skills'
 import SkillRow from './SkillRow'
+import SkillGroupRow from './SkillGroupRow'
 
 var character = {
   demands: {
@@ -672,53 +673,84 @@ class SkillPanel extends React.Component {
 
     const skillPrio = character.prioritiesData.find(element => { return element.key === "skills"; });
     let skillPtsRemaining = skillPrio.skills;
+    let skillGrpPtsRemaining = skillPrio.skillgroups;
 
     character.skills.forEach(skill => {
       skillPtsRemaining = skillPtsRemaining - skill.base;
+    });
+    character.skillGroups.forEach(group => {
+      skillGrpPtsRemaining = skillGrpPtsRemaining - group.base;
     });
 
     this.state = {
       skills: character.skills,
       attrValues: attrValues,
-      groupBy: 'category',
+      groupBy: 'skillgroup',
       groupOpts: {
         skillgroup: { groups: skills.groups.concat(['-']), label: "Skill Group", value: 'skillgroup' },
         category: { groups: skills.activeCategories, label: "Category", value: 'category' },
         attrName: { groups: character.attributes.map(attr => { return attr.name; }), label: "Attribute", value: 'attrName' }
       },
-      skillPtsRemaining: skillPtsRemaining
+      skillPtsRemaining: skillPtsRemaining,
+      doSkillGrps: Boolean(skillPrio.skillgroups),
+      skillGroups: character.skillGroups,
+      skillGrpPtsRemaining: skillGrpPtsRemaining
     };
 
     this.updateGroupBy = this.updateGroupBy.bind(this);
-    this.updateSkill = this.updateSkill.bind(this);
+    this.updateSkillElement = this.updateSkillElement.bind(this);
   }
 
   initPanel() {
-    updateCharacter({ skills: skills.activeSkills.map(skill => {
-      return Object.assign(skill, {
-        suid: skill.id,
-        guid: uuid(),
-        karma: 0,
-        base: 0
-      });
-    })});
+    updateCharacter({
+      skills: skills.activeSkills.map(skill => {
+        return Object.assign(skill, {
+          suid: skill.id,
+          guid: uuid(),
+          karma: 0,
+          base: 0
+        });
+      }),
+      skillGroups: skills.groups.map(groupName => {
+        return {
+          name: groupName,
+          id: uuid(),
+          karma: 0,
+          base: 0
+        };
+      })
+    });
   }
 
-  updateSkill(guid, value, type) {
-    const i = this.state.skills.findIndex(skill => skill.guid === guid);
-    const diff = value - this.state.skills[i][type];
+  /**
+   * Update a skill or skill group
+   * @param  {string}  id            The element's id
+   * @param  {number}  value         The new value to set
+   * @param  {string}  type          Karma or base
+   * @param  {boolean} [group=false] Skill group?
+   */
+  updateSkillElement(id, value, type, group = false) {
+    const props = group ?
+        { id: 'id', elements: 'skillGroups', pts: 'skillGrpPtsRemaining', factor: 5 }
+      :
+        { id: 'guid', elements: 'skills', pts: 'skillPtsRemaining', factor: 2 }
+    ;
+    const i = this.state[props.elements].findIndex(item => item[props.id] === id);
+    const diff = value - this.state[props.elements][i][type];
 
     if (diff !== 0) {
-      const skillsUpdate = update(this.state.skills, {[i]: {
+      const updateElements = update(this.state[props.elements], {[i]: {
         [type]: {$set: value}
       }});
-      let stateUpdate = { skills: skillsUpdate };
-      let charUpdate = { skills: skillsUpdate };
+      let stateUpdate = {};
+      stateUpdate[props.elements] = updateElements;
+      let charUpdate = {};
+      charUpdate[props.elements] = updateElements;
 
       if (type === 'base') {
-        stateUpdate.skillPtsRemaining = this.state.skillPtsRemaining - diff;
+        stateUpdate[props.pts] = this.state[props.pts] - diff;
       }
-      charUpdate.karmaRemaining = karmaCostRecalc(this.state.skills[i], skillsUpdate[i], 2);
+      charUpdate.karmaRemaining = karmaCostRecalc(this.state[props.elements][i], updateElements[i], 2);
 
       updateCharacter(charUpdate);
       this.setState(stateUpdate);
@@ -730,7 +762,6 @@ class SkillPanel extends React.Component {
   }
 
   render() {
-    // TODO: Skill groups
     // TODO: Filter box for skill table
     // TODO: Tooltips
     // TODO: SourceLink
@@ -744,8 +775,46 @@ class SkillPanel extends React.Component {
       )).sort((a, b) => { return a.name.localeCompare(b.name); });
     }).filter(items => (items.length > 0));
 
+    let skillGroupValues = {};
+    this.state.skills.forEach(skill => {
+      if (! skillGroupValues.hasOwnProperty(skill.skillgroup)) {
+        skillGroupValues[skill.skillgroup] = skill.base + skill.karma;
+      } else if (skillGroupValues[skill.skillgroup] !== (skill.base + skill.karma)) {
+        skillGroupValues[skill.skillgroup] = -1;
+      }
+    });
+
+    const skillGroupTable = this.state.doSkillGrps ? (
+      <React.Fragment>
+        <Callout>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
+        <HTMLTable id="rb-skill-group-table" className="rb-table" bordered={true}>
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Base Points</th>
+              <th>From Karma</th>
+            </tr>
+          </thead>
+          <tbody>
+            {this.state.skillGroups.map(group => {
+              return (
+                <SkillGroupRow
+                  group={group}
+                  key={group.id}
+                  disabledBase={(this.state.skills.findIndex(skill => { return (skill.base > 0 && skill.skillgroup === group.name); }) !== -1)}
+                  disabledKarma={(skillGroupValues[group.name] === -1)}
+                  updateElement={this.updateSkillElement}
+                />
+              );
+            })}
+          </tbody>
+        </HTMLTable>
+      </React.Fragment>
+    ) : null;
+
     return (
       <React.Fragment>
+        {skillGroupTable}
         <Callout>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-table" className="rb-table" bordered={true}>
           <thead>
@@ -767,17 +836,22 @@ class SkillPanel extends React.Component {
           <tbody>
             {sortedSkills.map(group => {
               const totalSkills = group.length;
-              return group.map((skill, index) => (
-                <SkillRow
-                  skill={skill}
-                  key={skill.guid}
-                  attrValue={this.state.attrValues[skill.attribute]}
-                  index={index}
-                  skillsInCollection={totalSkills}
-                  groupBy={this.state.groupBy}
-                  updateSkill={this.updateSkill}
-                />
-              ));
+              return group.map((skill, index) => {
+                const skillGroup = skill.skillgroup === '-' ? { base: 0, karma: 0 } : this.state.skillGroups.find(skillGroup => { return (skillGroup.name === skill.skillgroup); });
+                return (
+                  <SkillRow
+                    skill={skill}
+                    key={skill.guid}
+                    attrValue={this.state.attrValues[skill.attribute]}
+                    index={index}
+                    skillsInCollection={totalSkills}
+                    groupBy={this.state.groupBy}
+                    updateSkill={this.updateSkillElement}
+                    disabled={(skillGroup.base > 0)}
+                    skillGroupRating={(skillGroup.base + skillGroup.karma)}
+                  />
+                )
+              });
             })}
           </tbody>
         </HTMLTable>

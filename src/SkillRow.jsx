@@ -32,6 +32,7 @@ class SkillRow extends React.PureComponent {
             min="0"
             value={this.props.skill.base}
             onValueChange={this.updateSkillBase}
+            disabled={this.props.disabled}
           />
         </td>
         <td className="rb-skill-table-numeric">
