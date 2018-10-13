@@ -87,6 +87,8 @@ const priorities = [
     getData: function(index, character) {
       let prioItem = getPriorityData("Skills", index, character.gameplayoption);
       prioItem.key = "skills";
+      prioItem.skills = Number(prioItem.skills);
+      prioItem.skillgroups = Number(prioItem.skillgroups);
       return prioItem;
     }
   },
