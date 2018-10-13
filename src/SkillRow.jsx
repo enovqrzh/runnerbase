@@ -16,7 +16,6 @@ class SkillRow extends React.PureComponent {
     this.props.updateSkill(this.props.skill.guid, value, 'karma');
   }
 
-  // TODO: Skill points remaining
   render() {
     const rating = this.props.skill.base + this.props.skill.karma;
     const dice = rating === 0 ? this.props.attrValue - 1 : rating + this.props.attrValue;
@@ -28,7 +27,6 @@ class SkillRow extends React.PureComponent {
         {['skillgroup', 'category', 'attrName'].filter(col => (col !== this.props.groupBy)).map(col => (<td key={col}>{this.props.skill[col]}</td>))}
         <td className="rb-skill-table-numeric">
           <NumericInput
-            // id={this.props.skill.guid + '_Attr'}
             min="0"
             value={this.props.skill.base}
             onValueChange={this.updateSkillBase}
@@ -36,7 +34,6 @@ class SkillRow extends React.PureComponent {
         </td>
         <td className="rb-skill-table-numeric">
           <NumericInput
-            // id={this.props.skill.guid + '_Attr'}
             min="0"
             value={this.props.skill.karma}
             onValueChange={this.updateSkillKarma}

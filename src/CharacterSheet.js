@@ -47,7 +47,6 @@ function updateCharacter(elements) {
   console.log(character);
 }
 
-// TODO: Apply demands
 function updateDemands(source, excludes = null, requires = null) {
   character.demands.excludes = character.demands.excludes.filter(demand => demand.source !== source).concat(generateDemands(source, excludes));
   character.demands.requires = character.demands.requires.filter(demand => demand.source !== source).concat(generateDemands(source, requires));
@@ -426,10 +425,10 @@ class MetatypePanel extends React.PureComponent {
 /**
  * Recalculate the karma cost for points for a given attribute or skill
  *
- * @param  {object} oldItem  The previous state of the item
- * @param  {object} newItem  The new state of the item
- * @param  {numeric} factor  The factor by which point totals are multiplied to get karma cost
- * @return {numeric}         The karma remaining
+ * @param  {Object} oldItem  The previous state of the item
+ * @param  {Object} newItem  The new state of the item
+ * @param  {number} factor  The factor by which point totals are multiplied to get karma cost
+ * @return {number}         The karma remaining
  */
 function karmaCostRecalc(oldItem, newItem, factor) {
   let karmaRemaining = character.karmaRemaining;
@@ -734,6 +733,7 @@ class SkillPanel extends React.Component {
     // TODO: Skill groups
     // TODO: Filter box for skill table
     // TODO: Tooltips
+    // TODO: SourceLink
     // TODO: Specializations
 
     const sortedSkills = this.state.groupOpts[this.state.groupBy].groups.map(group => {
