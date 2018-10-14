@@ -664,6 +664,7 @@ class AttrPanel extends React.Component {
 
 class SkillPanel extends React.Component {
   constructor(props) {
+    // TODO: Remove irrelavant skill groups based on talent
     super(props);
 
     let attrValues = {};
@@ -786,7 +787,7 @@ class SkillPanel extends React.Component {
 
     const skillGroupTable = this.state.doSkillGrps ? (
       <React.Fragment>
-        <Callout>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
+        <Callout intent={(this.state.skillGrpPtsRemaining < 0) ? 'warning' : null}>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-group-table" className="rb-table" bordered={true}>
           <thead>
             <tr>
@@ -801,6 +802,7 @@ class SkillPanel extends React.Component {
                 <SkillGroupRow
                   group={group}
                   key={group.id}
+                  skillGrpPtsRemaining={this.state.skillGrpPtsRemaining}
                   disabledBase={(this.state.skills.findIndex(skill => { return (skill.base > 0 && skill.skillgroup === group.name); }) !== -1)}
                   disabledKarma={(skillGroupValues[group.name] === -1)}
                   updateElement={this.updateSkillElement}
@@ -815,7 +817,7 @@ class SkillPanel extends React.Component {
     return (
       <React.Fragment>
         {skillGroupTable}
-        <Callout>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
+        <Callout intent={(this.state.skillPtsRemaining < 0) ? 'warning' : null}>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-table" className="rb-table" bordered={true}>
           <thead>
             <tr>
@@ -848,7 +850,8 @@ class SkillPanel extends React.Component {
                     groupBy={this.state.groupBy}
                     updateSkill={this.updateSkillElement}
                     disabled={(skillGroup.base > 0)}
-                    skillGroupRating={(skillGroup.base + skillGroup.karma)}
+                    skillPtsRemaining={this.state.skillPtsRemaining}
+                    skillGroupRating={this.state.doSkillGrps ? (skillGroup.base + skillGroup.karma) : 0}
                   />
                 )
               });

@@ -22,6 +22,13 @@ class SkillRow extends React.PureComponent {
 
     const diceRating = ((rating === 0 && (! this.props.skill.default)) || dice === 0 )? ' - ' : dice + ' (' + rating + ')';
 
+    let baseIntent = null;
+    let baseMax = (this.props.skillPtsRemaining < (6 - this.props.skill.base)) ? this.props.skill.base + this.props.skillPtsRemaining : 6;
+    if (this.props.skillPtsRemaining < 0) {
+      baseMax = this.props.skill.base;
+      baseIntent = this.props.skill.base > 0 ? 'warning' : null;
+    }
+
     return (
       <tr className={this.props.index === 0 ? "rb-skill-table-section-top" : null}>
         {this.props.index === 0 ? <th className="rb-table-header2" scope="row" rowSpan={this.props.skillsInCollection}><div>{this.props.skill[this.props.groupBy]}</div></th> : null}
@@ -32,7 +39,9 @@ class SkillRow extends React.PureComponent {
             min="0"
             value={this.props.skill.base}
             onValueChange={this.updateSkillBase}
-            disabled={this.props.disabled}
+            disabled={this.props.disabled || baseMax <= 0}
+            max={baseMax <= 0 ? null : baseMax}
+            intent={baseIntent}
           />
         </td>
         <td className="rb-skill-table-numeric">

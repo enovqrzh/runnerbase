@@ -19,6 +19,13 @@ class SkillGroupRow extends React.PureComponent {
   }
 
   render() {
+    let baseIntent = null;
+    let baseMax = (this.props.skillGrpPtsRemaining < (6 - this.props.group.base)) ? this.props.group.base + this.props.skillGrpPtsRemaining : 6;
+    if (this.props.skillGrpPtsRemaining < 0) {
+      baseMax = this.props.group.base;
+      baseIntent = this.props.group.base > 0 ? 'warning' : null;
+    }
+
     return (
       <tr>
         <td>{this.props.group.name}</td>
@@ -27,7 +34,9 @@ class SkillGroupRow extends React.PureComponent {
             min="0"
             value={this.props.group.base}
             onValueChange={this.updateSkillGroupBase}
-            disabled={this.props.disabledBase}
+            disabled={this.props.disabledBase || baseMax <= 0}
+            max={baseMax <= 0 ? null : baseMax}
+            intent={baseIntent}
           />
         </td>
         <td className="rb-skill-table-numeric">
