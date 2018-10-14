@@ -22,6 +22,7 @@ import gameOptions from './data/gameplayoptions'
 import skills from './skills'
 import SkillRow from './SkillRow'
 import SkillGroupRow from './SkillGroupRow'
+import { karmaCost } from './karmaCost';
 
 var character = {
   demands: {
@@ -423,34 +424,6 @@ class MetatypePanel extends React.PureComponent {
   }
 }
 
-/**
- * Recalculate the karma cost for points for a given attribute or skill
- *
- * @param  {Object} oldItem  The previous state of the item
- * @param  {Object} newItem  The new state of the item
- * @param  {number} factor  The factor by which point totals are multiplied to get karma cost
- * @return {number}         The karma remaining
- */
-function karmaCostRecalc(oldItem, newItem, factor) {
-  let karmaRemaining = character.karmaRemaining;
-
-  if (oldItem.karma > 0) {
-    const base = oldItem.base + (oldItem.hasOwnProperty('metatypemin') ? oldItem.metatypemin : null);
-    for (let j = base + 1; j <= (base + oldItem.karma); j++) {
-      karmaRemaining = karmaRemaining + (j * factor);
-    }
-  }
-
-  if (newItem.karma > 0) {
-    const base = newItem.base + (newItem.hasOwnProperty('metatypemin') ? newItem.metatypemin : null);
-    for (let j = base + 1; j <= (base + newItem.karma); j++) {
-      karmaRemaining = karmaRemaining - (j * factor);
-    }
-  }
-
-  return karmaRemaining;
-}
-
 class AttrPanel extends React.Component {
   constructor(props) {
     super(props);
@@ -503,7 +476,7 @@ class AttrPanel extends React.Component {
       if ( i === -1 ) {
         const oldSpec = attrs.find(attr => { return otherAttrs.includes(attr.key); });
         if (oldSpec) {
-          updateCharacter({ karmaRemaining: karmaCostRecalc(oldSpec, { karma: 0 }, 5) });
+          updateCharacter({ karmaRemaining: (character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5)) });
         }
         updateAttrs = update(attrs, {$push: [{ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] }]});
       } else {
@@ -524,7 +497,7 @@ class AttrPanel extends React.Component {
       // Mundane, refund any karma previously spent on a special attr
       const oldSpec = oldAttrs.find(attr => { return ['mag', 'res', 'dep'].includes(attr.key); });
       if (oldSpec) {
-        updateCharacter({ karmaRemaining: karmaCostRecalc(oldSpec, { karma: 0 }, 5) });
+        updateCharacter({ karmaRemaining: character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5) });
         newAttrs = newAttrs.filter(attr => { return (! ['mag', 'res', 'dep'].includes(attr.key)); });
       }
     }
@@ -571,7 +544,7 @@ class AttrPanel extends React.Component {
       });
       newAttr = update(newAttr, {totalvalue: {$set: newAttr.metatypemin + newAttr.base + newAttr.karma}});
 
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(attr, newAttr, 5));
+      karmaDiff = karmaDiff + karmaCost(attr, newAttr, 5);
 
       return newAttr;
     });
@@ -606,7 +579,7 @@ class AttrPanel extends React.Component {
           updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
         }
       }
-      updateObj.karmaRemaining = karmaCostRecalc(this.state.attributes[i], attrsUpdate[i], 5);
+      updateObj.karmaRemaining = character.karmaRemaining - karmaCost(this.state.attributes[i], attrsUpdate[i], 5);
 
       updateCharacter(updateObj);
       this.setState(update(updateObj, {$unset: ['karmaRemaining']}));
@@ -685,8 +658,8 @@ class SkillPanel extends React.Component {
       ) {
         return update(skill, updateShow);
       } else {
-        karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(skill, updateSkill, 2));
         let updateSkill = update(skill, updateHide);
+        karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2);
         return updateSkill;
       }
     });
@@ -704,7 +677,7 @@ class SkillPanel extends React.Component {
         [groupIndices.sorcery]: updateShow,
         [groupIndices.tasking]: updateHide
       });
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5));
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
     } else if (attrKeys.includes('res')) {
       charUpdate.skillGroups = update(character.skillGroups, {
         [groupIndices.conjuring]: updateHide,
@@ -712,9 +685,9 @@ class SkillPanel extends React.Component {
         [groupIndices.sorcery]: updateHide,
         [groupIndices.tasking]: updateShow
       });
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5));
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5));
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5));
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
     } else {
       charUpdate.skillGroups = update(character.skillGroups, {
         [groupIndices.conjuring]: updateHide,
@@ -722,10 +695,10 @@ class SkillPanel extends React.Component {
         [groupIndices.sorcery]: updateHide,
         [groupIndices.tasking]: updateHide
       });
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5));
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5));
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5));
-      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5));
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
+      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
     }
 
     charUpdate.karmaRemaining = character.karmaRemaining - karmaDiff;
@@ -814,8 +787,9 @@ class SkillPanel extends React.Component {
       if (type === 'base') {
         stateUpdate[props.pts] = this.state[props.pts] - diff;
       }
-      charUpdate.karmaRemaining = karmaCostRecalc(this.state[props.elements][i], updateElements[i], 2);
+      let karmaDiff = karmaCost(this.state[props.elements][i], updateElements[i], props.factor);
 
+      charUpdate.karmaRemaining = character.karmaRemaining - karmaDiff;
       updateCharacter(charUpdate);
       this.setState(stateUpdate);
     }
