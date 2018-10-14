@@ -528,7 +528,6 @@ class AttrPanel extends React.Component {
         newAttrs = newAttrs.filter(attr => { return (! ['mag', 'res', 'dep'].includes(attr.key)); });
       }
     }
-    // TODO: Refund karma if old attribute object has a special attribute that is no longer present
 
     // TODO: Someday, we'll also need to add any augs and powers to totalValue
     const meta = character.metavariant ? character.metavariant : character.metatype;
@@ -725,6 +724,9 @@ class SkillPanel extends React.Component {
 
   /**
    * Update a skill or skill group
+   *
+   * TODO: Karma costs for skills with skillgroup points
+   *
    * @param  {string}  id            The element's id
    * @param  {number}  value         The new value to set
    * @param  {string}  type          Karma or base
