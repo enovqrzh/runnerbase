@@ -663,13 +663,73 @@ class AttrPanel extends React.Component {
 
 class SkillPanel extends React.Component {
   constructor(props) {
-    // TODO: Remove irrelavant skill groups based on talent
     super(props);
 
     let attrValues = {};
     character.attributes.forEach(attr => {
       attrValues[attr.key] = attr.totalvalue;
     });
+
+    // Filter out skills/groups where the character doesn't have the necessary attr
+    const attrKeys = Object.getOwnPropertyNames(attrValues);
+    let karmaDiff = 0;
+    let charUpdate = {};
+    const updateShow = { hidden: { $set: false } };
+    const updateHide = { base: { $set: 0 }, karma: { $set: 0 }, hidden: { $set: true } };
+
+    charUpdate.skills = character.skills.map(skill => {
+      if (
+        (skill.category !== "Magical" && skill.category !== "Resonance")
+        || (skill.category === "Magical" && attrKeys.includes('mag'))
+        || (skill.category === "Resonance" && attrKeys.includes('res'))
+      ) {
+        return update(skill, updateShow);
+      } else {
+        karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(skill, updateSkill, 2));
+        let updateSkill = update(skill, updateHide);
+        return updateSkill;
+      }
+    });
+
+    const groupIndices = {
+      conjuring: character.skillGroups.findIndex(group => (group.name === 'Conjuring')),
+      enchanting: character.skillGroups.findIndex(group => (group.name === 'Enchanting')),
+      sorcery: character.skillGroups.findIndex(group => (group.name === 'Sorcery')),
+      tasking: character.skillGroups.findIndex(group => (group.name === 'Tasking'))
+    };
+    if (attrKeys.includes('mag')) {
+      charUpdate.skillGroups = update(character.skillGroups, {
+        [groupIndices.conjuring]: updateShow,
+        [groupIndices.enchanting]: updateShow,
+        [groupIndices.sorcery]: updateShow,
+        [groupIndices.tasking]: updateHide
+      });
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5));
+    } else if (attrKeys.includes('res')) {
+      charUpdate.skillGroups = update(character.skillGroups, {
+        [groupIndices.conjuring]: updateHide,
+        [groupIndices.enchanting]: updateHide,
+        [groupIndices.sorcery]: updateHide,
+        [groupIndices.tasking]: updateShow
+      });
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5));
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5));
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5));
+    } else {
+      charUpdate.skillGroups = update(character.skillGroups, {
+        [groupIndices.conjuring]: updateHide,
+        [groupIndices.enchanting]: updateHide,
+        [groupIndices.sorcery]: updateHide,
+        [groupIndices.tasking]: updateHide
+      });
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5));
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5));
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5));
+      karmaDiff = karmaDiff + (character.karmaRemaining - karmaCostRecalc(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5));
+    }
+
+    charUpdate.karmaRemaining = character.karmaRemaining - karmaDiff;
+    updateCharacter(charUpdate);
 
     const skillPrio = character.prioritiesData.find(element => { return element.key === "skills"; });
     let skillPtsRemaining = skillPrio.skills;
@@ -692,7 +752,6 @@ class SkillPanel extends React.Component {
         attrName: { groups: character.attributes.map(attr => { return attr.name; }), label: "Attribute", value: 'attrName' }
       },
       skillPtsRemaining: skillPtsRemaining,
-      doSkillGrps: Boolean(skillPrio.skillgroups),
       skillGroups: character.skillGroups,
       skillGrpPtsRemaining: skillGrpPtsRemaining
     };
@@ -708,7 +767,8 @@ class SkillPanel extends React.Component {
           suid: skill.id,
           guid: uuid(),
           karma: 0,
-          base: 0
+          base: 0,
+          hidden: false
         });
       }),
       skillGroups: skills.groups.map(groupName => {
@@ -716,7 +776,8 @@ class SkillPanel extends React.Component {
           name: groupName,
           id: uuid(),
           karma: 0,
-          base: 0
+          base: 0,
+          hidden: false
         };
       })
     });
@@ -773,7 +834,7 @@ class SkillPanel extends React.Component {
     const sortedSkills = this.state.groupOpts[this.state.groupBy].groups.map(group => {
       return this.state.skills.filter(skill => (
         skill[this.state.groupBy] === group &&
-        this.state.attrValues.hasOwnProperty(skill.attribute) &&
+        skill.hidden !== true &&
         this.state.attrValues[skill.attribute] !== 0
       )).sort((a, b) => { return a.name.localeCompare(b.name); });
     }).filter(items => (items.length > 0));
@@ -799,7 +860,7 @@ class SkillPanel extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.skillGroups.map(group => {
+            {this.state.skillGroups.filter(group => (group.hidden !== true)).map(group => {
               return (
                 <SkillGroupRow
                   group={group}
