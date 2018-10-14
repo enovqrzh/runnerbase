@@ -741,7 +741,8 @@ class SkillPanel extends React.Component {
           guid: uuid(),
           karma: 0,
           base: 0,
-          hidden: false
+          hidden: false,
+          groupRating: 0
         });
       }),
       skillGroups: skills.groups.map(groupName => {
@@ -789,7 +790,21 @@ class SkillPanel extends React.Component {
       }
       let karmaDiff = karmaCost(this.state[props.elements][i], updateElements[i], props.factor);
 
+      // Update a skillgroup's rating in its child skills
+      if (group) {
+        let updateSkills = this.state.skills.map(skill => {
+          if (skill.skillgroup !== updateElements[i].name) {
+            return skill;
+          }
+          const updateSkill = update(skill, { groupRating: { $set: (updateElements[i].base + updateElements[i].karma) }});
+          karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2);
+          return updateSkill;
+        });
+        stateUpdate.skills = updateSkills;
+        charUpdate.skills = updateSkills;
+      }
       charUpdate.karmaRemaining = character.karmaRemaining - karmaDiff;
+
       updateCharacter(charUpdate);
       this.setState(stateUpdate);
     }
@@ -870,7 +885,6 @@ class SkillPanel extends React.Component {
             {sortedSkills.map(group => {
               const totalSkills = group.length;
               return group.map((skill, index) => {
-                const skillGroup = skill.skillgroup === '-' ? { base: 0, karma: 0 } : this.state.skillGroups.find(skillGroup => { return (skillGroup.name === skill.skillgroup); });
                 return (
                   <SkillRow
                     skill={skill}
@@ -880,9 +894,9 @@ class SkillPanel extends React.Component {
                     skillsInCollection={totalSkills}
                     groupBy={this.state.groupBy}
                     updateSkill={this.updateSkillElement}
-                    disabled={(skillGroup.base > 0)}
+                    disabled={(skill.groupRating > 0)}
                     skillPtsRemaining={this.state.skillPtsRemaining}
-                    skillGroupRating={skillGroup.base + skillGroup.karma}
+                    skillGroupRating={skill.groupRating}
                   />
                 )
               });
