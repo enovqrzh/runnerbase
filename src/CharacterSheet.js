@@ -785,7 +785,7 @@ class SkillPanel extends React.Component {
       }
     });
 
-    const skillGroupTable = this.state.doSkillGrps ? (
+    return (
       <React.Fragment>
         <Callout intent={(this.state.skillGrpPtsRemaining < 0) ? 'warning' : null}>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-group-table" className="rb-table" bordered={true}>
@@ -811,12 +811,6 @@ class SkillPanel extends React.Component {
             })}
           </tbody>
         </HTMLTable>
-      </React.Fragment>
-    ) : null;
-
-    return (
-      <React.Fragment>
-        {skillGroupTable}
         <Callout intent={(this.state.skillPtsRemaining < 0) ? 'warning' : null}>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-table" className="rb-table" bordered={true}>
           <thead>
@@ -851,7 +845,7 @@ class SkillPanel extends React.Component {
                     updateSkill={this.updateSkillElement}
                     disabled={(skillGroup.base > 0)}
                     skillPtsRemaining={this.state.skillPtsRemaining}
-                    skillGroupRating={this.state.doSkillGrps ? (skillGroup.base + skillGroup.karma) : 0}
+                    skillGroupRating={skillGroup.base + skillGroup.karma}
                   />
                 )
               });
