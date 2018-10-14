@@ -476,7 +476,7 @@ class AttrPanel extends React.Component {
       if ( i === -1 ) {
         const oldSpec = attrs.find(attr => { return otherAttrs.includes(attr.key); });
         if (oldSpec) {
-          updateCharacter({ karmaRemaining: (character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5)) });
+          updateCharacter({ karmaRemaining: (character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5, 'metatypemin')) });
         }
         updateAttrs = update(attrs, {$push: [{ name: specAttrs[key].name, key: key, base: 0, karma: 0, augmodifier: 0, special: true, talentMin: character.talent[specAttrs[key].type] }]});
       } else {
@@ -497,7 +497,7 @@ class AttrPanel extends React.Component {
       // Mundane, refund any karma previously spent on a special attr
       const oldSpec = oldAttrs.find(attr => { return ['mag', 'res', 'dep'].includes(attr.key); });
       if (oldSpec) {
-        updateCharacter({ karmaRemaining: character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5) });
+        updateCharacter({ karmaRemaining: character.karmaRemaining - karmaCost(oldSpec, { karma: 0 }, 5, 'metatypemin') });
         newAttrs = newAttrs.filter(attr => { return (! ['mag', 'res', 'dep'].includes(attr.key)); });
       }
     }
@@ -544,7 +544,7 @@ class AttrPanel extends React.Component {
       });
       newAttr = update(newAttr, {totalvalue: {$set: newAttr.metatypemin + newAttr.base + newAttr.karma}});
 
-      karmaDiff = karmaDiff + karmaCost(attr, newAttr, 5);
+      karmaDiff = karmaDiff + karmaCost(attr, newAttr, 5, 'metatypemin');
 
       return newAttr;
     });
@@ -579,7 +579,7 @@ class AttrPanel extends React.Component {
           updateObj.attrPtsRemaining = this.state.attrPtsRemaining - diff;
         }
       }
-      updateObj.karmaRemaining = character.karmaRemaining - karmaCost(this.state.attributes[i], attrsUpdate[i], 5);
+      updateObj.karmaRemaining = character.karmaRemaining - karmaCost(this.state.attributes[i], attrsUpdate[i], 5, 'metatypemin');
 
       updateCharacter(updateObj);
       this.setState(update(updateObj, {$unset: ['karmaRemaining']}));
@@ -659,7 +659,7 @@ class SkillPanel extends React.Component {
         return update(skill, updateShow);
       } else {
         let updateSkill = update(skill, updateHide);
-        karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2);
+        karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
         return updateSkill;
       }
     });
@@ -760,8 +760,6 @@ class SkillPanel extends React.Component {
   /**
    * Update a skill or skill group
    *
-   * TODO: Karma costs for skills with skillgroup points
-   *
    * @param  {string}  id            The element's id
    * @param  {number}  value         The new value to set
    * @param  {string}  type          Karma or base
@@ -769,9 +767,9 @@ class SkillPanel extends React.Component {
    */
   updateSkillElement(id, value, type, group = false) {
     const props = group ?
-        { id: 'id', elements: 'skillGroups', pts: 'skillGrpPtsRemaining', factor: 5 }
+        { id: 'id', elements: 'skillGroups', pts: 'skillGrpPtsRemaining', factor: 5, startingProp: null }
       :
-        { id: 'guid', elements: 'skills', pts: 'skillPtsRemaining', factor: 2 }
+        { id: 'guid', elements: 'skills', pts: 'skillPtsRemaining', factor: 2, startingProp: 'groupRating' }
     ;
     const i = this.state[props.elements].findIndex(item => item[props.id] === id);
     const diff = value - this.state[props.elements][i][type];
@@ -788,7 +786,7 @@ class SkillPanel extends React.Component {
       if (type === 'base') {
         stateUpdate[props.pts] = this.state[props.pts] - diff;
       }
-      let karmaDiff = karmaCost(this.state[props.elements][i], updateElements[i], props.factor);
+      let karmaDiff = karmaCost(this.state[props.elements][i], updateElements[i], props.factor, props.startingProp);
 
       // Update a skillgroup's rating in its child skills
       if (group) {
@@ -797,7 +795,7 @@ class SkillPanel extends React.Component {
             return skill;
           }
           const updateSkill = update(skill, { groupRating: { $set: (updateElements[i].base + updateElements[i].karma) }});
-          karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2);
+          karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
           return updateSkill;
         });
         stateUpdate.skills = updateSkills;
