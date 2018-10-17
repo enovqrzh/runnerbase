@@ -33,7 +33,7 @@ class SkillRow extends React.PureComponent {
       <tr className={this.props.index === 0 ? "rb-skill-table-section-top" : null}>
         {this.props.index === 0 ? <th className="rb-table-header2" scope="row" rowSpan={this.props.skillsInCollection}><div>{this.props.skill[this.props.groupBy]}</div></th> : null}
         <td>{this.props.skill.name}</td>
-        {['skillgroup', 'category', 'attrName'].filter(col => (col !== this.props.groupBy)).map(col => (<td key={col}>{this.props.skill[col]}</td>))}
+        {['skillgroup', 'attrName'].filter(col => (col !== this.props.groupBy)).map(col => (<td key={col}>{this.props.skill[col]}</td>))}
         <td className="rb-skill-table-numeric">
           <NumericInput
             min="0"

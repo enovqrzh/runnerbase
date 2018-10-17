@@ -721,7 +721,6 @@ class SkillPanel extends React.Component {
       groupBy: 'skillgroup',
       groupOpts: {
         skillgroup: { groups: skills.groups.concat(['-']), label: "Skill Group", value: 'skillgroup' },
-        category: { groups: skills.activeCategories, label: "Category", value: 'category' },
         attrName: { groups: character.attributes.map(attr => { return attr.name; }), label: "Attribute", value: 'attrName' }
       },
       skillPtsRemaining: skillPtsRemaining,
@@ -889,7 +888,7 @@ class SkillPanel extends React.Component {
                 />
               </th>
               <th>Name</th>
-              {['skillgroup', 'category', 'attrName'].filter(col => (col !== this.state.groupBy)).map(col => (<th key={col}>{this.state.groupOpts[col].label}</th>))}
+              {['skillgroup', 'attrName'].filter(col => (col !== this.state.groupBy)).map(col => (<th key={col}>{this.state.groupOpts[col].label}</th>))}
               <th className="rb-skill-table-numeric">Base Points</th>
               <th className="rb-skill-table-numeric">From Karma</th>
               <th className="rb-skill-table-numeric">Total Dice (Rating)</th>
