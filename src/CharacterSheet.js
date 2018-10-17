@@ -835,10 +835,29 @@ class SkillPanel extends React.Component {
       }
     });
 
-    return (
-      <React.Fragment>
-        <Callout intent={(this.state.skillGrpPtsRemaining < 0) ? 'warning' : null}>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
-        <HTMLTable id="rb-skill-group-table" className="rb-table" bordered={true}>
+    // Split the skill group table because it's not very wide
+    const visibleSkillGroups = this.state.skillGroups.filter(group => (group.hidden !== true));
+    const rowsPerSGTable = Math.ceil(visibleSkillGroups.length / 3);
+
+    let skillGroupTables = [];
+    for (let i = 0; i < 3; i++) {
+      let rows = [];
+      for (let j = i * rowsPerSGTable; (j < (rowsPerSGTable * (i + 1))) && (j < visibleSkillGroups.length); j++) {
+        console.log(j);
+        const group = visibleSkillGroups[j];
+        rows.push(
+          <SkillGroupRow
+            group={group}
+            key={group.id}
+            skillGrpPtsRemaining={this.state.skillGrpPtsRemaining}
+            disabledBase={(this.state.skills.findIndex(skill => { return (skill.base > 0 && skill.skillgroup === group.name); }) !== -1)}
+            disabledKarma={(skillGroupValues[group.name] === -1)}
+            updateElement={this.updateSkillElement}
+          />
+        );
+      }
+      skillGroupTables.push(
+        <HTMLTable id="rb-skill-group-table" className="rb-table" bordered={true} key={"sgtable" + i}>
           <thead>
             <tr>
               <th>Group</th>
@@ -847,20 +866,17 @@ class SkillPanel extends React.Component {
             </tr>
           </thead>
           <tbody>
-            {this.state.skillGroups.filter(group => (group.hidden !== true)).map(group => {
-              return (
-                <SkillGroupRow
-                  group={group}
-                  key={group.id}
-                  skillGrpPtsRemaining={this.state.skillGrpPtsRemaining}
-                  disabledBase={(this.state.skills.findIndex(skill => { return (skill.base > 0 && skill.skillgroup === group.name); }) !== -1)}
-                  disabledKarma={(skillGroupValues[group.name] === -1)}
-                  updateElement={this.updateSkillElement}
-                />
-              );
-            })}
+            {rows}
           </tbody>
         </HTMLTable>
+      );
+    }
+
+
+    return (
+      <React.Fragment>
+        <Callout intent={(this.state.skillGrpPtsRemaining < 0) ? 'warning' : null}>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>
+        <div id="rb-skill-group-tables">{skillGroupTables}</div>
         <Callout intent={(this.state.skillPtsRemaining < 0) ? 'warning' : null}>Skill Points Remaining: {this.state.skillPtsRemaining}</Callout>
         <HTMLTable id="rb-skill-table" className="rb-table" bordered={true}>
           <thead>

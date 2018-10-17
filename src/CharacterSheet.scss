@@ -134,6 +134,20 @@ table#rb-skill-table tbody tr td {
   box-shadow: inset -1px 1px 0 0 $pt-dark-divider-white;
 }
 
+// Skill group table
+div#rb-skill-group-tables {
+  display: flex;
+}
+
+table#rb-skill-group-table {
+  margin-right: 18px;
+  margin-bottom: 18px;
+}
+
+table#rb-skill-group-table:last-child {
+  margin-right: 0;
+}
+
 // Priority Selection
 div.rb-priority-selector {
   width: 125px;
