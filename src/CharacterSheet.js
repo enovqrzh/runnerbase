@@ -23,6 +23,7 @@ import skills from './skills'
 import SkillRow from './SkillRow'
 import SkillGroupRow from './SkillGroupRow'
 import { karmaCost } from './karmaCost';
+import SkillSpecDialog from './SkillSpecDialog';
 
 var character = {
   demands: {
@@ -152,7 +153,9 @@ class CharacterTabs extends React.Component {
           isCloseButtonShown={false}
           className={Classes.DARK}
         >
-          <Button icon="new-person" onClick={this.initCharacter}>Create a new character</Button>
+          <div className="rb-dialog-content">
+            <Button fill={false} icon="new-person" onClick={this.initCharacter}>Create a new character</Button>
+          </div>
         </Dialog>
         <RemainingContext.Provider value={this.state.remaining}>
           <div className="rb-top-box">
