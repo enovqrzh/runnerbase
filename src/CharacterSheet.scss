@@ -31,6 +31,13 @@ div#metatypegroup > div {
   margin-right: 15px;
 }
 
+// Dialog boxes
+div.rb-dialog-content {
+  padding: 8px 20px 0 20px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
 // All tables
 table.rb-table {
   border-collapse: collapse;
@@ -183,4 +190,17 @@ div.rb-priority-selector div.bp3-button {
 span.rb-source-link {
   cursor: pointer;
   color: $pt-dark-link-color;
+}
+
+// Skill specialization dialog
+div.rb-spec-add-dialog {
+  justify-content: space-between;
+}
+
+div.rb-spec-add-dialog > div {
+  min-width: 180px;
+}
+
+div.rb-spec-add-dialog label.bp3-radio {
+  margin-bottom: 5px;
 }
