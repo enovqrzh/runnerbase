@@ -1,11 +1,13 @@
 import React from 'react';
-import { NumericInput } from "@blueprintjs/core";
+import { NumericInput, Button, Icon, Tag } from "@blueprintjs/core";
 
 class SkillRow extends React.PureComponent {
   constructor(props) {
     super(props);
     this.updateSkillBase = this.updateSkillBase.bind(this);
     this.updateSkillKarma = this.updateSkillKarma.bind(this);
+    this.openSpecAdd = this.openSpecAdd.bind(this);
+    this.removeSpec = this.removeSpec.bind(this);
   }
 
   updateSkillBase(value) {
@@ -14,6 +16,16 @@ class SkillRow extends React.PureComponent {
 
   updateSkillKarma(value) {
     this.props.updateSkill(this.props.skill.guid, value, 'karma');
+  }
+
+  openSpecAdd() {
+    this.props.openSpecAdd(this.props.skill);
+  }
+
+  removeSpec(event, item) {
+    const specName = item.children;
+    const spec = this.props.skill.specs.find(item => (item !== null && item.name === specName));
+    this.props.removeSpec(this.props.skill, spec);
   }
 
   render() {
@@ -52,6 +64,12 @@ class SkillRow extends React.PureComponent {
           />
         </td>
         <td className="rb-skill-table-numeric">{diceRating}</td>
+        <td>
+          {this.props.skill.specs.map(spec => (
+            <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>{spec.name}</Tag>
+          ))}
+          <Button minimal={true} onClick={this.openSpecAdd}><Icon icon="add" /></Button>
+        </td>
       </tr>
     )
   }

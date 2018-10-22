@@ -658,8 +658,8 @@ class SkillPanel extends React.Component {
       ) {
         return update(skill, updateShow);
       } else {
-        let updateSkill = update(skill, updateHide);
-        karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
+        let updateSkill = update(skill, Object.assign({ specs: { $set: [] } }, updateHide));
+        karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating') - (7 * skill.specs.filter(spec => (spec.type === 'karma')).length);
         return updateSkill;
       }
     });
@@ -709,7 +709,7 @@ class SkillPanel extends React.Component {
     let skillGrpPtsRemaining = skillPrio.skillgroups;
 
     character.skills.forEach(skill => {
-      skillPtsRemaining = skillPtsRemaining - skill.base;
+      skillPtsRemaining = skillPtsRemaining - skill.base - skill.specs.filter(spec => (spec.type === 'base')).length;
     });
     character.skillGroups.forEach(group => {
       skillGrpPtsRemaining = skillGrpPtsRemaining - group.base;
@@ -725,11 +725,16 @@ class SkillPanel extends React.Component {
       },
       skillPtsRemaining: skillPtsRemaining,
       skillGroups: character.skillGroups,
-      skillGrpPtsRemaining: skillGrpPtsRemaining
+      skillGrpPtsRemaining: skillGrpPtsRemaining,
+      specAddSkill: null
     };
 
     this.updateGroupBy = this.updateGroupBy.bind(this);
     this.updateSkillElement = this.updateSkillElement.bind(this);
+    this.openSpecAdd = this.openSpecAdd.bind(this);
+    this.closeSpecAdd = this.closeSpecAdd.bind(this);
+    this.addSpec = this.addSpec.bind(this);
+    this.removeSpec = this.removeSpec.bind(this);
   }
 
   initPanel() {
@@ -741,7 +746,8 @@ class SkillPanel extends React.Component {
           karma: 0,
           base: 0,
           hidden: false,
-          groupRating: 0
+          groupRating: 0,
+          specs: []
         });
       }),
       skillGroups: skills.groups.map(groupName => {
@@ -809,6 +815,78 @@ class SkillPanel extends React.Component {
 
   updateGroupBy(event) {
     this.setState({ groupBy: event.currentTarget.value });
+  }
+
+  openSpecAdd(skill) {
+    this.setState({ specAddSkill: skill });
+  }
+
+  closeSpecAdd() {
+    this.setState({ specAddSkill: null });
+  }
+
+  /**
+   * Add a skill specialization
+   *
+   * @param {Object} skill The skill object to which the spec is being added
+   * @param {Object} spec  The specialiation to add
+   */
+  addSpec(skill, spec) {
+    const i = this.state.skills.findIndex(row => (row.guid === skill.guid));
+    const skillUpdate = update(this.state.skills, {
+      [i]: {
+        specs: { $push: [spec] },
+        specOptions: { $set: skill.specOptions.filter(item => (item.id !== spec.id)) }
+      }
+    });
+    let stateUpdate = { skills: skillUpdate };
+    let charUpdate = { skills: skillUpdate };
+
+    if (spec.type === 'base') {
+      stateUpdate.skillPtsRemaining = this.state.skillPtsRemaining - 1;
+    } else {
+      charUpdate.karmaRemaining = character.karmaRemaining - 7;
+    }
+
+    this.setState(stateUpdate);
+    updateCharacter(charUpdate);
+  }
+
+  removeSpec(skill, spec) {
+    const i = this.state.skills.findIndex(row => (row.guid === skill.guid));
+
+    let updateObj = {
+      [i]: {
+        specs: { $set: skill.specs.filter(item => (item.id !== spec.id)) }
+      }
+    };
+
+    if (! spec.isCustom) {
+      updateObj[i].specOptions = {
+        $set : skill.specOptions.concat([spec]).sort((a,b) => {
+          if (a.isCustomCategory === b.isCustomCategory) {
+            return a.name.localeCompare(b.name);
+          } else if (a.isCustomCategory) {
+            return -1;
+          } else {
+            return 1;
+          }
+        })
+      };
+    }
+
+    const skillUpdate = update(this.state.skills, updateObj);
+    let stateUpdate = { skills: skillUpdate };
+    let charUpdate = { skills: skillUpdate };
+
+    if (spec.type === 'base') {
+      stateUpdate.skillPtsRemaining = this.state.skillPtsRemaining + 1;
+    } else {
+      charUpdate.karmaRemaining = character.karmaRemaining + 7;
+    }
+
+    this.setState(stateUpdate);
+    updateCharacter(charUpdate);
   }
 
   render() {
@@ -892,6 +970,7 @@ class SkillPanel extends React.Component {
               <th className="rb-skill-table-numeric">Base Points</th>
               <th className="rb-skill-table-numeric">From Karma</th>
               <th className="rb-skill-table-numeric">Total Dice (Rating)</th>
+              <th>Specializations</th>
             </tr>
           </thead>
           <tbody>
@@ -910,12 +989,19 @@ class SkillPanel extends React.Component {
                     disabled={(skill.groupRating > 0)}
                     skillPtsRemaining={this.state.skillPtsRemaining}
                     skillGroupRating={skill.groupRating}
+                    openSpecAdd={this.openSpecAdd}
+                    removeSpec={this.removeSpec}
                   />
                 )
               });
             })}
           </tbody>
         </HTMLTable>
+        <SkillSpecDialog
+          specAddSkill={this.state.specAddSkill}
+          addSpec={this.addSpec}
+          closeSpecAdd={this.closeSpecAdd}
+        />
       </React.Fragment>
     );
   }
