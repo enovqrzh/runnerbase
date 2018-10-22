@@ -40,7 +40,6 @@ class SkillRow extends React.PureComponent {
       baseMax = this.props.skill.base;
       baseIntent = this.props.skill.base > 0 ? 'warning' : null;
     }
-
     return (
       <tr className={this.props.index === 0 ? "rb-skill-table-section-top" : null}>
         {this.props.index === 0 ? <th className="rb-table-header2" scope="row" rowSpan={this.props.skillsInCollection}><div>{this.props.skill[this.props.groupBy]}</div></th> : null}

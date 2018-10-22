@@ -311,6 +311,7 @@ class PrioSelPanel extends React.Component {
   }
 
   render() {
+    // TODO: The way this is currently set up is super not accessible
     return (
       <FormGroup
         helperText={<span>Reference: <SourceLink source="SR5" page="65" /></span>}
@@ -923,7 +924,6 @@ class SkillPanel extends React.Component {
     for (let i = 0; i < 3; i++) {
       let rows = [];
       for (let j = i * rowsPerSGTable; (j < (rowsPerSGTable * (i + 1))) && (j < visibleSkillGroups.length); j++) {
-        console.log(j);
         const group = visibleSkillGroups[j];
         rows.push(
           <SkillGroupRow
@@ -951,7 +951,6 @@ class SkillPanel extends React.Component {
         </HTMLTable>
       );
     }
-
 
     return (
       <React.Fragment>

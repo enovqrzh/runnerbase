@@ -8,7 +8,6 @@ const renderMenuItem: ItemRenderer = (item, { handleClick, modifiers, query }) =
     return null;
   }
 
-
   return (
     <MenuItem
       active={modifiers.active}
