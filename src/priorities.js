@@ -37,10 +37,10 @@ const priorities = [
     key: "attr",
     id: "attr",
     text: "Attributes",
-    getDescription: function(index, character) {
+    getDescription: function(index, metaGameOpt) {
       let itemName = getPriorityData("Attributes", index, null, "name");
 
-      const meta = character.metavariant ? character.metavariant : character.metatype;
+      const meta = metaGameOpt.meta.metavariant ? metaGameOpt.meta.metavariant : metaGameOpt.meta.metatype;
       if (meta.hasOwnProperty('halveattributepoints')) {
         itemName = itemName.replace(/(\d+) \((\d+)\)/, "$2");
       } else {
@@ -48,12 +48,12 @@ const priorities = [
       }
       return itemName;
     },
-    getData: function(index, character) {
+    getData: function(index, metaGameOpt) {
       // Use a shallow copy of the priority data so we don't muck it up by changing the source with metatypes that halve points
       let prioItem = Object.assign({}, getPriorityData("Attributes", index));
       prioItem.key = "attr";
 
-      const meta = character.metavariant ? character.metavariant : character.metatype;
+      const meta = metaGameOpt.meta.metavariant ? metaGameOpt.meta.metavariant : metaGameOpt.meta.metatype;
       if (meta.hasOwnProperty('halveattributepoints')) {
         prioItem.attributes = prioItem.attributes / 2;
         prioItem.name = prioItem.name.replace(/(\d+) \((\d+)\)/, "$2");
@@ -81,11 +81,11 @@ const priorities = [
     key: "skills",
     id: "skills",
     text: "Skills",
-    getDescription: function(index, character) {
-      return getPriorityData("Skills", index, character.gameplayoption, "name");
+    getDescription: function(index, metaGameOpt) {
+      return getPriorityData("Skills", index, metaGameOpt.gameOptions.name, "name");
     },
-    getData: function(index, character) {
-      let prioItem = getPriorityData("Skills", index, character.gameplayoption);
+    getData: function(index, metaGameOpt) {
+      let prioItem = getPriorityData("Skills", index, metaGameOpt.gameOptions.name);
       prioItem.key = "skills";
       prioItem.skills = Number(prioItem.skills);
       prioItem.skillgroups = Number(prioItem.skillgroups);
@@ -96,11 +96,11 @@ const priorities = [
     key: "res",
     id: "res",
     text: "Resources",
-    getDescription: function(index, character) {
-      return getPriorityData("Resources", index, character.gameplayoption, "name");
+    getDescription: function(index, metaGameOpt) {
+      return getPriorityData("Resources", index, metaGameOpt.gameOptions.name, "name");
     },
-    getData: function(index, character) {
-      let prioItem = getPriorityData("Resources", index, character.gameplayoption);
+    getData: function(index, metaGameOpt) {
+      let prioItem = getPriorityData("Resources", index, metaGameOpt.gameOptions.name);
       prioItem.key = "res";
       return prioItem;
     }

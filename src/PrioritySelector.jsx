@@ -25,7 +25,7 @@ class PrioritySelector extends Component {
 
   updatePriorities() {
     const { items } = this.state;
-    this.props.updatePriorityDescriptions(items);
+    this.props.updatePriorities(items);
   }
 
   moveItem(id, atIndex, dropped) {

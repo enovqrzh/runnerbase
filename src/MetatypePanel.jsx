@@ -6,24 +6,16 @@ import renderMenuItem from './renderMenuItem';
 import getMetatypes from './getMetatypes';
 import SourceLink from './SourceLink';
 
-class Metatype extends React.Component {
+class MetatypePanel extends React.Component {
   constructor(props) {
     super(props);
 
-    let metatypes = null;
-    let metaPrio = this.props.origCharacter.prioritiesData.find((element) => {
-      return (element.key === "meta");
-    });
-    let metatypeCategories = this.getMetatypeCategories(metaPrio, this.props.origCharacter.demands);
-
-    metatypes = getMetatypes(this.props.origCharacter.metatypecategory, metaPrio, this.props.origCharacter.demands);
+    let metatypeCategories = this.getMetatypeCategories(this.props.metaPrio, this.props.demands);
+    let metatypes = getMetatypes(this.props.meta.category, this.props.metaPrio, this.props.demands);
+    
     this.state = {
-      category: this.props.origCharacter.metatypecategory,
       categoryTypes: metatypes,
-      metatype: this.props.origCharacter.metatype,
-      metavariant: this.props.origCharacter.metavariant ? this.props.origCharacter.metavariant : this.props.origCharacter.metatype,
-      metatypeVariants: this.getMetavariants(this.props.origCharacter.metatype, metaPrio, this.props.origCharacter.demands),
-      metaPrio: metaPrio
+      metatypeVariants: this.getMetavariants(this.props.meta.metatype, this.props.metaPrio, this.props.demands),
     };
 
     this.state.metatypeCategories = metatypeCategories;
@@ -31,6 +23,17 @@ class Metatype extends React.Component {
     this.handleCategoryValueChange = this.handleCategoryValueChange.bind(this);
     this.handleMetatypeValueChange = this.handleMetatypeValueChange.bind(this);
     this.handleMetavariantValueChange = this.handleMetavariantValueChange.bind(this);
+  }
+
+  initPanel(character) {
+    const metatypes = getMetatypes({ id: 0, name: "Metahuman" }, character.priorities.data.meta, character.demands);
+    return { 
+      meta: {
+        category: { id: 0, name: "Metahuman" },
+        metatype: metatypes[0],
+        metavariant: null
+      } 
+    };
   }
 
   getMetatypeCategories(metaPrio, demands) {
@@ -86,20 +89,17 @@ class Metatype extends React.Component {
 
   handleCategoryValueChange(item) {
     // If the category actually changed, reset the metatype select
-    if (this.state.category !== item) {
-      const metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.state.metaPrio, this.props.origCharacter.demands);
+    if (this.props.meta.category !== item) {
+      const metatypes = getMetatypes(this.state.metatypeCategories[item.id], this.props.metaPrio, this.props.demands);
 
       this.setState({
-        category: item,
         categoryTypes: metatypes,
-        metatype: (metatypes.length === 0) ? this.state.metatype : metatypes[0],
-        metatypeVariants: this.getMetavariants(metatypes[0], this.state.metaPrio, this.props.origCharacter.demands),
-        metavariant: (metatypes.length === 0) ? this.state.metatype : metatypes[0]
+        metatypeVariants: this.getMetavariants(metatypes[0], this.props.metaPrio, this.props.demands),
       });
 
-      this.props.characterUpdate({
-        metatypecategory: item,
-        metatype: (metatypes.length === 0) ? this.state.metatype : metatypes[0],
+      this.updateMeta({
+        category: item,
+        metatype: (metatypes.length === 0) ? this.props.meta.metatype : metatypes[0],
         metavariant: null
       });
     }
@@ -107,13 +107,11 @@ class Metatype extends React.Component {
 
   handleMetatypeValueChange(item) {
     // If the metatype actually changed, reset the metavariant select
-    if (this.state.metatype !== item) {
+    if (this.props.meta.metatype !== item) {
       this.setState({
-        metatype: item,
-        metatypeVariants: this.getMetavariants(item, this.state.metaPrio, this.props.origCharacter.demands),
-        metavariant: item
+        metatypeVariants: this.getMetavariants(item, this.props.metaPrio, this.props.demands),
       });
-      this.props.characterUpdate({
+      this.updateMeta({
         metatype: item,
         metavariant: null
       });
@@ -121,22 +119,27 @@ class Metatype extends React.Component {
   }
 
   handleMetavariantValueChange(item) {
-    this.setState({
-      metavariant: item
-    });
-    this.props.characterUpdate({
-      metavariant: (item !== this.state.metatype) ? item : null
-    });
+    if (this.props.meta.metavariant !== item) {
+      this.updateMeta({
+        metavariant: (item !== this.props.meta.metatype) ? item : null
+      });
+    }
+  }
+
+  updateMeta(elements) {
+    this.props.updateCharacter({ meta: Object.assign(this.props.meta, elements) });
   }
 
   render() {
-    let catIntent = this.state.metatypeCategories.find(function(item) {return (item.id === this.state.category.id);}, this) ? 'none' : 'warning';
-    let typeIntent = ((catIntent !== 'warning') && this.state.categoryTypes.includes(this.state.metatype)) ? 'none' : 'warning';
-    let variantIntent = ((typeIntent !== 'warning') && this.state.metatypeVariants.includes(this.state.metavariant)) ? 'none' : 'warning';
+    let metavariant = this.props.meta.metavariant ? this.props.meta.metavariant : this.props.meta.metatype; 
+
+    let catIntent = this.state.metatypeCategories.find(function(item) {return (item.id === this.props.meta.category.id);}, this) ? 'none' : 'warning';
+    let typeIntent = ((catIntent !== 'warning') && this.state.categoryTypes.includes(this.props.meta.metatype)) ? 'none' : 'warning';
+    let variantIntent = ((typeIntent !== 'warning') && this.state.metatypeVariants.includes(metavariant)) ? 'none' : 'warning';
 
     return (
       <FormGroup
-        helperText={<span>Reference: <SourceLink source={this.state.metavariant.source} page={this.state.metavariant.page} /></span>}
+        helperText={<span>Reference: <SourceLink source={metavariant.source} page={metavariant.page} /></span>}
         labelFor="metatypegroup"
       >
         <ControlGroup id="metatypegroup">
@@ -151,7 +154,7 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleCategoryValueChange}
             >
-              <Button text={this.state.category.name} rightIcon="double-caret-vertical" intent={catIntent} />
+              <Button text={this.props.meta.category.name} rightIcon="double-caret-vertical" intent={catIntent} />
             </Select>
           </FormGroup>
 
@@ -166,7 +169,7 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetatypeValueChange}
             >
-              <Button text={this.state.metatype.name} rightIcon="double-caret-vertical" intent={typeIntent} />
+              <Button text={this.props.meta.metatype.name} rightIcon="double-caret-vertical" intent={typeIntent} />
             </Select>
           </FormGroup>
 
@@ -181,7 +184,7 @@ class Metatype extends React.Component {
               filterable={false}
               onItemSelect={this.handleMetavariantValueChange}
             >
-              <Button text={this.state.metavariant.name} rightIcon="double-caret-vertical" intent={variantIntent} />
+              <Button text={metavariant.name} rightIcon="double-caret-vertical" intent={variantIntent} />
             </Select>
           </FormGroup>
         </ControlGroup>
@@ -190,4 +193,4 @@ class Metatype extends React.Component {
   }
 }
 
-export default Metatype;
+export default MetatypePanel;
