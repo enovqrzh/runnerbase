@@ -183,11 +183,18 @@ table#rb-skill-table td {
   padding-right: 18px;
 }
 
+div.rb-skill-name {
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
 }
 
+div.rb-skill-name > span {
   display: flex;
 }
 
+div.rb-skill-name span.rb-source-link {
+  font-size: $pt-font-size-small;
 }
 
 table#rb-skill-table td.rb-skill-table-numeric,

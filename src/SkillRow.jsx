@@ -1,5 +1,6 @@
 import React from 'react';
 import { NumericInput, Button, Icon, Tag } from "@blueprintjs/core";
+import SourceLink from './SourceLink';
 
 class SkillRow extends React.PureComponent {
   constructor(props) {
@@ -43,7 +44,7 @@ class SkillRow extends React.PureComponent {
     return (
       <tr className={this.props.index === 0 ? "rb-skill-table-section-top" : null}>
         {this.props.index === 0 ? <th className="rb-table-header2" scope="row" rowSpan={this.props.skillsInCollection}><div>{this.props.skill[this.props.groupBy]}</div></th> : null}
-        <td>{this.props.skill.name}</td>
+        <td><div className="rb-skill-name"><span>{this.props.skill.name}</span><SourceLink source={this.props.skill.source} page={this.props.skill.page}/></div></td>
         {['skillgroup', 'attrName'].filter(col => (col !== this.props.groupBy)).map(col => (<td key={col}>{this.props.skill[col]}</td>))}
         <td className="rb-skill-table-numeric">
           <NumericInput

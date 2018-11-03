@@ -281,7 +281,6 @@ class SkillPanel extends React.Component {
   render() {
     // TODO: Filter box for skill table
     // TODO: Tooltips
-    // TODO: SourceLink
     const sortedSkills = this.state.groupOpts[this.state.groupBy].groups.map(group => {
       return this.props.skills.filter(skill => (skill[this.state.groupBy] === group &&
         skill.hidden !== true &&
