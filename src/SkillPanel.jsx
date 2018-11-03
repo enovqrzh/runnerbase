@@ -50,8 +50,8 @@ class SkillPanel extends React.Component {
     this.removeSpec = this.removeSpec.bind(this);
   }
 
-  initPanel() {
-    return {
+  initPanel(character) {
+    const base = {
       skills: skills.activeSkills.map(skill => {
         return Object.assign(skill, {
           suid: skill.id,
@@ -71,19 +71,38 @@ class SkillPanel extends React.Component {
           base: 0,
           hidden: false
         };
-      }),
-      hooks: { attributes: this.hookUpdate }
+      })
     };
+
+    let initObj = SkillPanel.refreshSkills(base.skills, base.skillGroups, character.attributes, character.meta, character.karmaRemaining)
+
+    initObj.hooks = { attributes: this.hookUpdate };
+
+    return initObj;
   }
 
   /**
-   * Update the skill table based on attribute changes
+   * Passthrough for refreshing skill table based on attribute or metatype change
    * 
    * @param {RB_Character} character  The character object with the changed attributes
    * @returns {Object}  An object with updated properties to be applied to the character object
    */
   hookUpdate(character) {
-    const attrKeys = character.attributes.map(attr => attr.key);
+    return SkillPanel.refreshSkills(character.skills, character.skillGroups, character.attributes, character.meta, character.karmaRemaining);
+  }
+
+  /**
+   * Update the skill table based on attribute or metatype changes
+   *
+   * @param {Array} oldSkills       An array of character skills
+   * @param {Array} oldSkillGroups  An array of character skill groups
+   * @param {Array} attributes      An array of character attributes
+   * @param {Object} meta           An object with the character's metatype information
+   * @param {number} karmaRemaining The character's remaining karma points
+   * @returns {Object}  An object with updated character properties
+   */
+  static refreshSkills(oldSkills, oldSkillGroups, attributes, meta, karmaRemaining) {
+    const attrKeys = attributes.map(attr => attr.key);
     
     // Filter out skills/groups where the character doesn't have the necessary attr
     let karmaDiff = 0;
@@ -91,10 +110,14 @@ class SkillPanel extends React.Component {
     const updateShow = { hidden: { $set: false } };
     const updateHide = { base: { $set: 0 }, karma: { $set: 0 }, hidden: { $set: true } };
 
-    charUpdate.skills = character.skills.map(skill => {
-      if ((skill.category !== "Magical" && skill.category !== "Resonance")
+    charUpdate.skills = oldSkills.map(skill => {
+      if (
+        (skill.category !== "Magical" && skill.category !== "Resonance" 
+          && (skill.name !== "Flight" || (skill.name === "Flight" && meta.metatype.hasOwnProperty('flight') && meta.metatype.flight))
+        )
         || (skill.category === "Magical" && attrKeys.includes('mag'))
-        || (skill.category === "Resonance" && attrKeys.includes('res'))) {
+        || (skill.category === "Resonance" && attrKeys.includes('res')
+      )) {
         return update(skill, updateShow);
       }
       else {
@@ -105,46 +128,46 @@ class SkillPanel extends React.Component {
     });
 
     const groupIndices = {
-      conjuring: character.skillGroups.findIndex(group => (group.name === 'Conjuring')),
-      enchanting: character.skillGroups.findIndex(group => (group.name === 'Enchanting')),
-      sorcery: character.skillGroups.findIndex(group => (group.name === 'Sorcery')),
-      tasking: character.skillGroups.findIndex(group => (group.name === 'Tasking'))
+      conjuring: oldSkillGroups.findIndex(group => (group.name === 'Conjuring')),
+      enchanting: oldSkillGroups.findIndex(group => (group.name === 'Enchanting')),
+      sorcery: oldSkillGroups.findIndex(group => (group.name === 'Sorcery')),
+      tasking: oldSkillGroups.findIndex(group => (group.name === 'Tasking'))
     };
 
     if (attrKeys.includes('mag')) {
-      charUpdate.skillGroups = update(character.skillGroups, {
+      charUpdate.skillGroups = update(oldSkillGroups, {
         [groupIndices.conjuring]: updateShow,
         [groupIndices.enchanting]: updateShow,
         [groupIndices.sorcery]: updateShow,
         [groupIndices.tasking]: updateHide
       });
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
     }
     else if (attrKeys.includes('res')) {
-      charUpdate.skillGroups = update(character.skillGroups, {
+      charUpdate.skillGroups = update(oldSkillGroups, {
         [groupIndices.conjuring]: updateHide,
         [groupIndices.enchanting]: updateHide,
         [groupIndices.sorcery]: updateHide,
         [groupIndices.tasking]: updateShow
       });
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
     }
     else {
-      charUpdate.skillGroups = update(character.skillGroups, {
+      charUpdate.skillGroups = update(oldSkillGroups, {
         [groupIndices.conjuring]: updateHide,
         [groupIndices.enchanting]: updateHide,
         [groupIndices.sorcery]: updateHide,
         [groupIndices.tasking]: updateHide
       });
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
-      karmaDiff = karmaDiff + karmaCost(character.skillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.conjuring], charUpdate.skillGroups[groupIndices.conjuring], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.enchanting], charUpdate.skillGroups[groupIndices.enchanting], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.sorcery], charUpdate.skillGroups[groupIndices.sorcery], 5);
+      karmaDiff = karmaDiff + karmaCost(oldSkillGroups[groupIndices.tasking], charUpdate.skillGroups[groupIndices.tasking], 5);
     }
 
-    charUpdate.karmaRemaining = character.karmaRemaining - karmaDiff;
+    charUpdate.karmaRemaining = karmaRemaining - karmaDiff;
     return charUpdate;
   }
 
