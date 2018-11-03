@@ -1,5 +1,5 @@
 import React from 'react';
-import './CharacterSheet.css';
+import './CharacterSheet.scss';
 
 import { Button, Callout, Classes, Dialog, EditableText, FormGroup, H1, H2, Icon, InputGroup, Tab, Tabs } from "@blueprintjs/core";
 
