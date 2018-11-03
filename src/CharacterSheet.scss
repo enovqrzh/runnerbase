@@ -61,6 +61,44 @@ table.rb-table td {
   padding-bottom: 3px;
 }
 
+// Source links
+span.rb-source-link {
+  cursor: pointer;
+  color: $pt-dark-link-color;
+}
+
+// Priority Selection
+div.rb-priority-selector {
+  width: 125px;
+  display: inline-block;
+}
+
+div.rb-priority-description-container {
+  display: inline-block;
+  width: 300px;
+}
+
+.bp3-dark div.rb-priority-description-container div.bp3-button,
+.bp3-dark div.rb-priority-description-container div.bp3-button:hover,
+.bp3-dark div.rb-priority-description-container div.bp3-button:active {
+  width: 300px;
+  justify-content: left;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  cursor: unset;
+  background-image: none;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px rgba($black, 0.2), inset 0 -1px 0 rgba($black, 0.1);
+}
+
+div.rb-priority-selector div.bp3-button {
+  width: 125px;
+  cursor: move;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  justify-content: space-between;
+}
+
 table.rb-table input.bp3-input {
   width: 50px;
 }
@@ -98,6 +136,20 @@ table#rb-attr-table td div {
   display: inline-flex;
 }
 
+// Skill group table
+div#rb-skill-group-tables {
+  display: flex;
+}
+
+table#rb-skill-group-table {
+  margin-right: 18px;
+  margin-bottom: 18px;
+}
+
+table#rb-skill-group-table:last-child {
+  margin-right: 0;
+}
+
 // Skill table
 table#rb-skill-table thead th {
   position: sticky;
@@ -131,6 +183,13 @@ table#rb-skill-table td {
   padding-right: 18px;
 }
 
+}
+
+  display: flex;
+}
+
+}
+
 table#rb-skill-table td.rb-skill-table-numeric,
 table#rb-skill-table th.rb-skill-table-numeric {
   text-align: center;
@@ -139,58 +198,6 @@ table#rb-skill-table th.rb-skill-table-numeric {
 table#rb-skill-table tbody tr th,
 table#rb-skill-table tbody tr td {
   box-shadow: inset -1px 1px 0 0 $pt-dark-divider-white;
-}
-
-// Skill group table
-div#rb-skill-group-tables {
-  display: flex;
-}
-
-table#rb-skill-group-table {
-  margin-right: 18px;
-  margin-bottom: 18px;
-}
-
-table#rb-skill-group-table:last-child {
-  margin-right: 0;
-}
-
-// Priority Selection
-div.rb-priority-selector {
-  width: 125px;
-  display: inline-block;
-}
-
-div.rb-priority-description-container {
-  display: inline-block;
-  width: 300px;
-}
-
-.bp3-dark div.rb-priority-description-container div.bp3-button,
-.bp3-dark div.rb-priority-description-container div.bp3-button:hover,
-.bp3-dark div.rb-priority-description-container div.bp3-button:active {
-  width: 300px;
-  justify-content: left;
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  cursor: unset;
-  background-image: none;
-  background: transparent;
-  box-shadow: inset 0 0 0 1px rgba($black, 0.2), inset 0 -1px 0 rgba($black, 0.1);
-}
-
-div.rb-priority-selector div.bp3-button {
-  width: 125px;
-  cursor: move;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  justify-content: space-between;
-}
-
-// Source links
-span.rb-source-link {
-  cursor: pointer;
-  color: $pt-dark-link-color;
 }
 
 // Skill specialization dialog

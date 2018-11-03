@@ -1,6 +1,6 @@
 import React from 'react';
 
-class SourceLink extends React.Component {
+class SourceLink extends React.PureComponent {
   constructor(props, context) {
     super(props, context);
     this.amznOut = this.amznOut.bind(this);

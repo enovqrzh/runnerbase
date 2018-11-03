@@ -189,7 +189,6 @@ class SkillPanel extends React.Component {
         charUpdate.skills = updateSkills;
       }
 
-      
       charUpdate[props.elements] = updateElements;
       charUpdate.karmaRemaining = this.props.karmaRemaining - karmaDiff;
       this.props.updateCharacter(charUpdate);
@@ -244,7 +243,7 @@ class SkillPanel extends React.Component {
    * Remove a skill specialization
    *
    * @param {Object} skill  The skill object from which the specialization is being removed
-   * @param {Object} spec  The specialization being removed
+   * @param {Object} spec   The specialization being removed
    */
   removeSpec(skill, spec) {
     const i = this.props.skills.findIndex(row => (row.guid === skill.guid));
@@ -283,7 +282,6 @@ class SkillPanel extends React.Component {
     // TODO: Filter box for skill table
     // TODO: Tooltips
     // TODO: SourceLink
-    // TODO: Specializations
     const sortedSkills = this.state.groupOpts[this.state.groupBy].groups.map(group => {
       return this.props.skills.filter(skill => (skill[this.state.groupBy] === group &&
         skill.hidden !== true &&
@@ -334,6 +332,7 @@ class SkillPanel extends React.Component {
         </HTMLTable>
       );
     }
+
     return (
       <React.Fragment>
         <Callout intent={(this.state.skillGrpPtsRemaining < 0) ? 'warning' : null}>Skill Group Points Remaining: {this.state.skillGrpPtsRemaining}</Callout>

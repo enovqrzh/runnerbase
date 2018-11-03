@@ -182,7 +182,7 @@ class PlayerName extends React.PureComponent {
   }
 }
 
-class RemainingCard extends React.Component {
+class RemainingCard extends React.PureComponent {
   render() {
     return (
       <Callout className="rb-remaining-box" intent={(this.props.karmaRemaining >= 0) ? null : "warning"}>

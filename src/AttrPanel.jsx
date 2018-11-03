@@ -92,7 +92,7 @@ class AttrPanel extends React.Component {
       const oldSpec = oldAttrs.find(attr => { return ['mag', 'res', 'dep'].includes(attr.key); });
       if (oldSpec) {
         karmaDiff = karmaDiff + karmaCost(oldSpec, { karma: 0 }, 5, 'metatypemin');
-        newAttrs = newAttrs.filter(attr => { return (!['mag', 'res', 'dep'].includes(attr.key)); });
+        newAttrs = newAttrs.filter(attr => { return (! ['mag', 'res', 'dep'].includes(attr.key)); });
       }
     }
 
