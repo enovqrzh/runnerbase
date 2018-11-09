@@ -99,7 +99,12 @@ div.rb-priority-selector div.bp3-button {
   justify-content: space-between;
 }
 
-table.rb-table input.bp3-input {
+table.rb-table td.rb-table-numeric,
+table.rb-table th.rb-table-numeric {
+  text-align: center;
+}
+
+.rb-table-numeric input.bp3-input {
   width: 50px;
 }
 
@@ -195,11 +200,6 @@ div.rb-skill-name > span {
 
 div.rb-skill-name span.rb-source-link {
   font-size: $pt-font-size-small;
-}
-
-table#rb-skill-table td.rb-skill-table-numeric,
-table#rb-skill-table th.rb-skill-table-numeric {
-  text-align: center;
 }
 
 table#rb-skill-table tbody tr th,

@@ -15,6 +15,8 @@ const renderMenuItem: ItemRenderer = (item, { handleClick, modifiers, query }) =
       key={item.id}
       onClick={handleClick}
       text={item.name}
+      intent={item.hasOwnProperty('intent') ? item.intent : null}
+      icon={item.hasOwnProperty('icon') ? item.icon : null}
       labelElement={(item.hasOwnProperty('source') ? <SourceLink source={item.source} page={item.page} /> : null)}
     />
   );

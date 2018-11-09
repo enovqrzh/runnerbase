@@ -1,5 +1,5 @@
 import React from 'react';
-import { NumericInput, Button, Icon, Tag } from "@blueprintjs/core";
+import { NumericInput, Button, Tag } from "@blueprintjs/core";
 import SourceLink from './SourceLink';
 
 class SkillRow extends React.PureComponent {
@@ -11,12 +11,14 @@ class SkillRow extends React.PureComponent {
     this.removeSpec = this.removeSpec.bind(this);
   }
 
+  updateSkillProps = { id: 'guid', elements: 'skills', pts: 'skillPtsRemaining', factor: 2, startingProp: 'groupRating' };
+
   updateSkillBase(value) {
-    this.props.updateSkill(this.props.skill.guid, value, 'base');
+    this.props.updateSkill(this.props.skill.guid, value, 'base', this.updateSkillProps);
   }
 
   updateSkillKarma(value) {
-    this.props.updateSkill(this.props.skill.guid, value, 'karma');
+    this.props.updateSkill(this.props.skill.guid, value, 'karma', this.updateSkillProps);
   }
 
   openSpecAdd() {
@@ -26,7 +28,7 @@ class SkillRow extends React.PureComponent {
   removeSpec(event, item) {
     const specName = item.children;
     const spec = this.props.skill.specs.find(item => (item !== null && item.name === specName));
-    this.props.removeSpec(this.props.skill, spec);
+    this.props.removeSpec(this.props.skill, spec, "skills");
   }
 
   render() {
@@ -46,7 +48,7 @@ class SkillRow extends React.PureComponent {
         {this.props.index === 0 ? <th className="rb-table-header2" scope="row" rowSpan={this.props.skillsInCollection}><div>{this.props.skill[this.props.groupBy]}</div></th> : null}
         <td><div className="rb-skill-name"><span>{this.props.skill.name}</span><SourceLink source={this.props.skill.source} page={this.props.skill.page}/></div></td>
         {['skillgroup', 'attrName'].filter(col => (col !== this.props.groupBy)).map(col => (<td key={col}>{this.props.skill[col]}</td>))}
-        <td className="rb-skill-table-numeric">
+        <td className="rb-table-numeric">
           <NumericInput
             min="0"
             value={this.props.skill.base}
@@ -56,19 +58,19 @@ class SkillRow extends React.PureComponent {
             intent={baseIntent}
           />
         </td>
-        <td className="rb-skill-table-numeric">
+        <td className="rb-table-numeric">
           <NumericInput
             min="0"
             value={this.props.skill.karma}
             onValueChange={this.updateSkillKarma}
           />
         </td>
-        <td className="rb-skill-table-numeric">{diceRating}</td>
+        <td className="rb-table-numeric">{diceRating}</td>
         <td>
           {this.props.skill.specs.map(spec => (
             <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>{spec.name}</Tag>
           ))}
-          <Button minimal={true} onClick={this.openSpecAdd}><Icon icon="add" /></Button>
+          <Button minimal={true} onClick={this.openSpecAdd} icon="add" intent="success" />
         </td>
       </tr>
     )

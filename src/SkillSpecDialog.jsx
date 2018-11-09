@@ -51,7 +51,7 @@ class SkillSpecDialog extends React.PureComponent {
     } else {
       spec = this.state.selectedSpec;
     }
-    this.props.addSpec(this.props.specAddSkill, Object.assign(spec, { type: this.state.payWith }));
+    this.props.addSpec(this.props.specAddSkill, Object.assign(spec, { type: this.state.payWith }), this.props.skillPropKey);
     this.closeSpecAdd();
   }
 

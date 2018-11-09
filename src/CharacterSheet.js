@@ -10,7 +10,8 @@ import PrioSelPanel from './PrioSelPanel';
 import TalentSelPanel from './TalentSelPanel';
 import MetatypePanel from './MetatypePanel';
 import AttrPanel from './AttrPanel';
-import SkillPanel from './SkillPanel';
+import ActiveSkillPanel from './ActiveSkillPanel';
+import KnowPanel from './KnowPanel';
 
 class CharacterSheet extends React.PureComponent {
   constructor(props) {
@@ -83,8 +84,8 @@ class CharacterSheet extends React.PureComponent {
               updateCharacter={this.updateCharacter}
             />} 
           />
-          <Tab id="skills" title="Skills" panel={
-            <SkillPanel 
+          <Tab id="skills" title="Active Skills" panel={
+            <ActiveSkillPanel 
               attributes={char.attributes}
               skillPrio={prioData.skills}
               skills={char.skills}
@@ -92,6 +93,15 @@ class CharacterSheet extends React.PureComponent {
               karmaRemaining={char.karmaRemaining}
               updateCharacter={this.updateCharacter}
             />} 
+          />
+          <Tab id="knowledge" title="Knowledge Skills" panel={
+            <KnowPanel
+              attributes={char.attributes}
+              knowledgeSkills={char.knowledgeSkills}
+              nativeLanguages={char.nativeLanguages}
+              karmaRemaining={char.karmaRemaining}
+              updateCharacter={this.updateCharacter}
+            />}
           />
         </CharacterTabs>
       </div>

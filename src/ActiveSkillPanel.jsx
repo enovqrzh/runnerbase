@@ -3,15 +3,13 @@ import { Callout, HTMLSelect, HTMLTable } from "@blueprintjs/core";
 import update from 'immutability-helper';
 import { v4 as uuid } from 'uuid';
 
-import skills from './skills';
-
+import skills, { skillPanel } from './skills';
 import { karmaCost } from './karmaCost';
-
 import SkillRow from './SkillRow';
 import SkillGroupRow from './SkillGroupRow';
 import SkillSpecDialog from './SkillSpecDialog';
 
-class SkillPanel extends React.Component {
+class ActiveSkillPanel extends skillPanel {
   constructor(props) {
     super(props);
 
@@ -43,11 +41,6 @@ class SkillPanel extends React.Component {
     };
 
     this.updateGroupBy = this.updateGroupBy.bind(this);
-    this.updateSkillElement = this.updateSkillElement.bind(this);
-    this.openSpecAdd = this.openSpecAdd.bind(this);
-    this.closeSpecAdd = this.closeSpecAdd.bind(this);
-    this.addSpec = this.addSpec.bind(this);
-    this.removeSpec = this.removeSpec.bind(this);
   }
 
   initPanel(character) {
@@ -74,7 +67,7 @@ class SkillPanel extends React.Component {
       })
     };
 
-    let initObj = SkillPanel.refreshSkills(base.skills, base.skillGroups, character.attributes, character.meta, character.karmaRemaining)
+    let initObj = ActiveSkillPanel.refreshSkills(base.skills, base.skillGroups, character.attributes, character.meta, character.karmaRemaining)
 
     initObj.hooks = { attributes: this.hookUpdate };
 
@@ -88,7 +81,7 @@ class SkillPanel extends React.Component {
    * @returns {Object}  An object with updated properties to be applied to the character object
    */
   hookUpdate(character) {
-    return SkillPanel.refreshSkills(character.skills, character.skillGroups, character.attributes, character.meta, character.karmaRemaining);
+    return ActiveSkillPanel.refreshSkills(character.skills, character.skillGroups, character.attributes, character.meta, character.karmaRemaining);
   }
 
   /**
@@ -171,134 +164,8 @@ class SkillPanel extends React.Component {
     return charUpdate;
   }
 
-  /**
-   * Update a skill or skill group
-   *
-   * @param  {string}  id            The element's id
-   * @param  {number}  value         The new value to set
-   * @param  {string}  type          Karma or base
-   * @param  {boolean} [group=false] Skill group?
-   */
-  updateSkillElement(id, value, type, group = false) {
-    const props = group ?
-      { id: 'id', elements: 'skillGroups', pts: 'skillGrpPtsRemaining', factor: 5, startingProp: null }
-      :
-      { id: 'guid', elements: 'skills', pts: 'skillPtsRemaining', factor: 2, startingProp: 'groupRating' };
-
-    const i = this.props[props.elements].findIndex(item => item[props.id] === id);
-    const diff = value - this.props[props.elements][i][type];
-
-    if (diff !== 0) {
-      const updateElements = update(this.props[props.elements], {
-        [i]: {
-          [type]: { $set: value }
-        }
-      });
-
-      let karmaDiff = karmaCost(this.props[props.elements][i], updateElements[i], props.factor, props.startingProp);
-
-      let charUpdate = {};
-      
-      // Update a skillgroup's rating in its child skills
-      if (group) {
-        let updateSkills = this.props.skills.map(skill => {
-          if (skill.skillgroup !== updateElements[i].name) {
-            return skill;
-          }
-          const updateSkill = update(skill, { groupRating: { $set: (updateElements[i].base + updateElements[i].karma) } });
-          karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
-          return updateSkill;
-        });
-        charUpdate.skills = updateSkills;
-      }
-
-      charUpdate[props.elements] = updateElements;
-      charUpdate.karmaRemaining = this.props.karmaRemaining - karmaDiff;
-      this.props.updateCharacter(charUpdate);
-
-      if (type === 'base') {
-        let stateUpdate = {};
-        stateUpdate[props.pts] = this.state[props.pts] - diff;
-        this.setState(stateUpdate);
-      }
-    }
-  }
-
   updateGroupBy(event) {
     this.setState({ groupBy: event.currentTarget.value });
-  }
-
-  openSpecAdd(skill) {
-    this.setState({ specAddSkill: skill });
-  }
-
-  closeSpecAdd() {
-    this.setState({ specAddSkill: null });
-  }
-
-  /**
-   * Add a skill specialization
-   *
-   * @param {Object} skill The skill object to which the spec is being added
-   * @param {Object} spec  The specialiation to add
-   */
-  addSpec(skill, spec) {
-    const i = this.props.skills.findIndex(row => (row.guid === skill.guid));
-    const skillUpdate = update(this.props.skills, {
-      [i]: {
-        specs: { $push: [spec] },
-        specOptions: { $set: skill.specOptions.filter(item => (item.id !== spec.id)) }
-      }
-    });
-
-    let charUpdate = { skills: skillUpdate };
-    if (spec.type === 'base') {
-      this.setState({ skillPtsRemaining: this.state.skillPtsRemaining - 1});
-    }
-    else {
-      charUpdate.karmaRemaining = this.props.karmaRemaining - 7;
-    }
-    
-    this.props.updateCharacter(charUpdate);
-  }
-
-  /**
-   * Remove a skill specialization
-   *
-   * @param {Object} skill  The skill object from which the specialization is being removed
-   * @param {Object} spec   The specialization being removed
-   */
-  removeSpec(skill, spec) {
-    const i = this.props.skills.findIndex(row => (row.guid === skill.guid));
-    let updateObj = {
-      [i]: {
-        specs: { $set: skill.specs.filter(item => (item.id !== spec.id)) }
-      }
-    };
-    if (! spec.isCustom) {
-      updateObj[i].specOptions = {
-        $set: skill.specOptions.concat([spec]).sort((a, b) => {
-          if (a.isCustomCategory === b.isCustomCategory) {
-            return a.name.localeCompare(b.name);
-          }
-          else if (a.isCustomCategory) {
-            return -1;
-          }
-          else {
-            return 1;
-          }
-        })
-      };
-    }
-
-    let charUpdate = { skills: update(this.props.skills, updateObj) };
-    if (spec.type === 'base') {
-      this.setState({ skillPtsRemaining: this.state.skillPtsRemaining + 1 });
-    }
-    else {
-      charUpdate.karmaRemaining = this.props.karmaRemaining + 7;
-    }
-    this.props.updateCharacter(charUpdate);
   }
 
   render() {
@@ -344,8 +211,8 @@ class SkillPanel extends React.Component {
           <thead>
             <tr>
               <th>Group</th>
-              <th>Base Points</th>
-              <th>From Karma</th>
+              <th className="rb-table-numeric">Base Points</th>
+              <th className="rb-table-numeric">Karma</th>
             </tr>
           </thead>
           <tbody>
@@ -368,9 +235,9 @@ class SkillPanel extends React.Component {
               </th>
               <th>Name</th>
               {['skillgroup', 'attrName'].filter(col => (col !== this.state.groupBy)).map(col => (<th key={col}>{this.state.groupOpts[col].label}</th>))}
-              <th className="rb-skill-table-numeric">Base Points</th>
-              <th className="rb-skill-table-numeric">From Karma</th>
-              <th className="rb-skill-table-numeric">Total Dice (Rating)</th>
+              <th className="rb-table-numeric">Base Points</th>
+              <th className="rb-table-numeric">Karma</th>
+              <th className="rb-table-numeric">Total Dice (Rating)</th>
               <th>Specializations</th>
             </tr>
           </thead>
@@ -398,10 +265,15 @@ class SkillPanel extends React.Component {
             })}
           </tbody>
         </HTMLTable>
-        <SkillSpecDialog specAddSkill={this.state.specAddSkill} addSpec={this.addSpec} closeSpecAdd={this.closeSpecAdd} />
+        <SkillSpecDialog 
+          specAddSkill={this.state.specAddSkill} 
+          addSpec={this.addSpec} 
+          closeSpecAdd={this.closeSpecAdd}
+          skillPropKey="skills"
+        />
       </React.Fragment>
     );
   }
 }
 
-export default SkillPanel;
+export default ActiveSkillPanel;

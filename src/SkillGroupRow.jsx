@@ -1,8 +1,6 @@
 import React from 'react';
 import { NumericInput } from "@blueprintjs/core";
 
-const IS_SKILL_GROUP = true;
-
 class SkillGroupRow extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -10,12 +8,14 @@ class SkillGroupRow extends React.PureComponent {
     this.updateSkillGroupKarma = this.updateSkillGroupKarma.bind(this);
   }
 
+  updateSkillProps = { id: 'id', elements: 'skillGroups', pts: 'skillGrpPtsRemaining', factor: 5, startingProp: null };
+
   updateSkillGroupBase(value) {
-    this.props.updateElement(this.props.group.id, value, 'base', IS_SKILL_GROUP);
+    this.props.updateElement(this.props.group.id, value, 'base', this.updateSkillProps);
   }
 
   updateSkillGroupKarma(value) {
-    this.props.updateElement(this.props.group.id, value, 'karma', IS_SKILL_GROUP);
+    this.props.updateElement(this.props.group.id, value, 'karma', this.updateSkillProps);
   }
 
   render() {
@@ -29,7 +29,7 @@ class SkillGroupRow extends React.PureComponent {
     return (
       <tr>
         <td>{this.props.group.name}</td>
-        <td className="rb-skill-table-numeric">
+        <td className="rb-table-numeric">
           <NumericInput
             min="0"
             value={this.props.group.base}
@@ -39,7 +39,7 @@ class SkillGroupRow extends React.PureComponent {
             intent={baseIntent}
           />
         </td>
-        <td className="rb-skill-table-numeric">
+        <td className="rb-table-numeric">
           <NumericInput
             min="0"
             value={this.props.group.karma}
