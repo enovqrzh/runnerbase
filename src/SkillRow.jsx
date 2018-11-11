@@ -66,7 +66,7 @@ class SkillRow extends React.PureComponent {
           />
         </td>
         <td className="rb-table-numeric">{diceRating}</td>
-        <td>
+        <td className="rb-table-tag">
           {this.props.skill.specs.map(spec => (
             <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>{spec.name}</Tag>
           ))}

@@ -70,16 +70,17 @@ class SkillSpecDialog extends React.PureComponent {
       const specAddSkill = this.props.specAddSkill;
 
       let specInput = null;
-
-      if (this.state.addingCustomType) {
+      
+      let customType = this.state.addingCustomType ? this.state.addingCustomType : specAddSkill.specOptions.length === 0 ? 'Custom' : false;
+      if (customType) {
         specInput = (
           <FormGroup
             labelFor="custom-spec"
-            helperText={"Enter a " + this.state.addingCustomType + " specialization."}
+            helperText={"Enter a " + customType + " specialization."}
           >
             <InputGroup
               id="custom-spec"
-              placeholder={this.state.addingCustomType}
+              placeholder={customType}
               onChange={this.changeCustomName}
             />
           </FormGroup>

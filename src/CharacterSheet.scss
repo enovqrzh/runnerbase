@@ -104,6 +104,10 @@ table.rb-table th.rb-table-numeric {
   text-align: center;
 }
 
+table.rb-table td.rb-table-tag {
+  text-align: right;
+}
+
 .rb-table-numeric input.bp3-input {
   width: 50px;
 }
@@ -210,10 +214,6 @@ table#rb-skill-table tbody tr td {
 // Skill specialization dialog
 div.rb-spec-add-dialog {
   justify-content: space-between;
-}
-
-div.rb-spec-add-dialog > div {
-  min-width: 180px;
 }
 
 div.rb-spec-add-dialog label.bp3-radio {

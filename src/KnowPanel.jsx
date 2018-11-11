@@ -35,6 +35,7 @@ class KnowPanel extends skillPanel {
     };
 
     this.addSkill = this.addSkill.bind(this);
+    this.updateSkillProperties = this.updateSkillProperties.bind(this);
   }
 
   initPanel() {
@@ -48,13 +49,18 @@ class KnowPanel extends skillPanel {
     return skill.name;
   }
 
+  /**
+   * Add a knowledge skill to a character
+   *
+   * @param {Object} skill  The skill object to add to the character
+   */
   addSkill(skill) {
     let addSkill;
     let stateUpdate = {};
 
     if (skill.custom) {
       addSkill = update(skill, {
-        suid: { $set: uuid() },
+        suid: { $set: skill.id },
         guid: { $set: uuid() },
         karma: { $set: 0 },
         base: { $set: 0 },
@@ -79,15 +85,26 @@ class KnowPanel extends skillPanel {
     this.props.updateCharacter({ knowledgeSkills: update(this.props.knowledgeSkills, { $push: [ addSkill ] })});
   }
 
+  /**
+   * A function to filter / add a custom option to a list of skills
+   *
+   * @param {string}  query   The query string
+   * @param {Array}   skills  The array of skills
+   * @returns {Array}   The filtered list of skills
+   */
   addSkillPredicate(query, skills) {
     let filteredSkills = [];
-    if (query.length > 2) {
+    if (query.length > 0) {
       const fuse = new Fuse(skills, {
         threshold: 0.4,
         keys: ['name'],
         minMatchCharLength: 3
       });
       filteredSkills = fuse.search(query);
+
+      if (filteredSkills.length > 15) {
+        filteredSkills = filteredSkills.slice(0, 14);
+      }
 
       if (filteredSkills.length === 0 || filteredSkills[0].name !== query) {
         filteredSkills.push({
@@ -98,12 +115,19 @@ class KnowPanel extends skillPanel {
           specOptions: [],
           custom: true,
           icon: 'add',
-          intent: 'success'
+          intent: 'success',
+          id: uuid()
         });
       }
     }
 
     return filteredSkills;
+  }
+
+  updateSkillProperties(updatedSkill) {
+    const i = this.props.knowledgeSkills.findIndex(item => item.guid === updatedSkill.guid);
+
+    this.props.updateCharacter({ knowledgeSkills: update(this.props.knowledgeSkills, { [i]: { $set: updatedSkill } }) });
   }
 
   render() {
@@ -135,6 +159,7 @@ class KnowPanel extends skillPanel {
                 updateSkill={this.updateSkillElement} 
                 openSpecAdd={this.openSpecAdd} 
                 removeSpec={this.removeSpec} 
+                updateSkillProperties={this.updateSkillProperties}
               />
             ))}
           </tbody>
@@ -155,6 +180,7 @@ class KnowPanel extends skillPanel {
                     itemListPredicate={this.addSkillPredicate}
                     selectedItem={null}
                     resetOnSelect={true}
+                    openOnKeyDown={true}
                   />
                 </FormGroup>
               </th>

@@ -1,15 +1,25 @@
 import React from 'react';
-import { NumericInput, Button, Tag, Colors } from "@blueprintjs/core";
+import { NumericInput, Button, Tag, Colors, HTMLSelect } from "@blueprintjs/core";
 import Transition from 'react-transition-group/Transition'
+import update from 'immutability-helper';
 
 class KnowRow extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = { mounted: false };
+    this.state = { 
+      mounted: false,
+      catOpts: {
+        Academic: { label: 'Academic', value: 'Academic', attribute: 'log', attrName: 'Logic' },
+        Interests: { label: 'Interests', value: 'Interests', attribute: 'int', attrName: 'Intuition' },
+        Professional: { label: 'Professional', value: 'Professional', attribute: 'log', attrName: 'Logic' },
+        Street: { label: 'Street', value: 'Street', attribute: 'int', attrName: 'Intuition' }
+      }
+    };
 
     this.updateSkillBase = this.updateSkillBase.bind(this);
     this.updateSkillKarma = this.updateSkillKarma.bind(this);
+    this.updateCategory = this.updateCategory.bind(this);
     this.openSpecAdd = this.openSpecAdd.bind(this);
     this.removeSpec = this.removeSpec.bind(this);
   }
@@ -26,6 +36,15 @@ class KnowRow extends React.PureComponent {
 
   updateSkillKarma(value) {
     this.props.updateSkill(this.props.skill.guid, value, 'karma', this.updateSkillProps);
+  }
+
+  updateCategory(event) {
+    const cat = this.state.catOpts[event.currentTarget.value];
+    this.props.updateSkillProperties(update(this.props.skill, {
+      category: { $set: cat.value },
+      attribute: { $set: cat.attribute },
+      attrName: { $set: cat.attrName }
+    }));
   }
 
   openSpecAdd() {
@@ -53,7 +72,13 @@ class KnowRow extends React.PureComponent {
     let row = (
       <React.Fragment>
         <td>{this.props.skill.name}</td>
-        <td>{this.props.skill.category}</td>
+        <td>
+          <HTMLSelect
+            options={Object.values(this.state.catOpts)}
+            value={this.props.skill.category}
+            onChange={this.updateCategory}
+          />
+        </td>
         <td className="rb-table-numeric">
           <NumericInput
             min="0"
@@ -72,7 +97,7 @@ class KnowRow extends React.PureComponent {
           />
         </td>
         <td className="rb-table-numeric">{diceRating}</td>
-        <td>
+        <td className="rb-table-tag">
           {this.props.skill.specs.map(spec => (
             <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>{spec.name}</Tag>
           ))}
@@ -88,16 +113,16 @@ class KnowRow extends React.PureComponent {
       const duration = 1200;
 
       const defaultStyle = {
-        'transition-property': 'opacity, background-color',
-        'transition-duration': `${duration/4}ms, ${duration}ms`,
-        'transition-timing-function': 'ease-in-out, ease-in-out',
+        transitionProperty: 'opacity, background-color',
+        transitionDuration: `${duration/4}ms, ${duration}ms`,
+        transitionTimingFunction: 'ease-in-out, ease-in-out',
         opacity: 0,
-        'background-color': 'transparent'
+        backgroundColor: 'transparent'
       };
 
       const transitionStyles = {
-        entering: { opacity: 1, 'background-color': Colors.GREEN1 },
-        entered: { opacity: 1, 'background-color': 'transparent' }
+        entering: { opacity: 1, backgroundColor: Colors.GREEN1 },
+        entered: { opacity: 1, backgroundColor: 'transparent' }
       };
 
       return (
