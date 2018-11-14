@@ -15,10 +15,10 @@ class RB_Character {
         });
       }
     });
-    
+
     return newChar;
   }
-} 
+}
 
 class RB_Demands {
   constructor(excls = [], reqs = []) {
@@ -34,8 +34,7 @@ class RB_Demands {
 
     if (Array.isArray(this[type])) {
       this[type].forEach(demand => {
-        if (demand.target === target)
-          values.push(demand.item);
+        if (demand.target === target) values.push(demand.item);
       });
     }
 
@@ -44,22 +43,28 @@ class RB_Demands {
 
   updateDemands(source, excludes = null, requires = null) {
     console.log(this);
-    const ret_excls = this.excludes.filter(demand => demand.source !== source).concat(this.generateDemands(source, excludes));
-    const ret_reqs = this.requires.filter(demand => demand.source !== source).concat(this.generateDemands(source, requires));
+    const ret_excls = this.excludes
+      .filter(demand => demand.source !== source)
+      .concat(this.generateDemands(source, excludes));
+    const ret_reqs = this.requires
+      .filter(demand => demand.source !== source)
+      .concat(this.generateDemands(source, requires));
 
     return new RB_Demands(ret_excls, ret_reqs);
   }
 
   generateDemands(source, items = null) {
     let demands = [];
-  
+
     if (items) {
       if (items.hasOwnProperty('oneof')) {
         Object.entries(items.oneof).forEach(pair => {
           if (Array.isArray(pair[1])) {
-            demands.concat(pair[1].map(item => {
-              return new RB_Demand(source, pair[0], item);
-            }));
+            demands.concat(
+              pair[1].map(item => {
+                return new RB_Demand(source, pair[0], item);
+              })
+            );
           } else {
             demands.push(new RB_Demand(source, pair[0], pair[1]));
           }

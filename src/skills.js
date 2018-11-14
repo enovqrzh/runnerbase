@@ -6,19 +6,19 @@ import { v4 as uuid } from 'uuid';
 import { karmaCost } from './karmaCost';
 
 const attrNames = {
-  BOD: "Body",
-  AGI: "Agility",
-  REA: "Reaction",
-  STR: "Strength",
-  CHA: "Charisma",
-  INT: "Intuition",
-  LOG: "Logic",
-  WIL: "Willpower",
-  EDG: "Edge",
-  MAG: "Magic",
-  RES: "Resonance",
-  DEP: "Depth"
-}
+  BOD: 'Body',
+  AGI: 'Agility',
+  REA: 'Reaction',
+  STR: 'Strength',
+  CHA: 'Charisma',
+  INT: 'Intuition',
+  LOG: 'Logic',
+  WIL: 'Willpower',
+  EDG: 'Edge',
+  MAG: 'Magic',
+  RES: 'Resonance',
+  DEP: 'Depth'
+};
 
 const skills = {
   groups: skillData.chummer.skillgroups.name,
@@ -26,22 +26,26 @@ const skills = {
     .filter(cat => cat.type === 'active')
     .map(cat => {
       return cat['$t'].slice(0, -7);
-    })
-  ,
+    }),
   knowledgeCategories: skillData.chummer.categories.category
     .filter(cat => cat.type === 'knowledge')
     .map(cat => {
       return cat['$t'];
-    })
-  ,
+    }),
   activeSkills: skillData.chummer.skills.skill.map(skill => {
     return update(skill, {
       attribute: { $set: skill.attribute.toLowerCase() },
       attrName: { $set: attrNames[skill.attribute] },
       category: { $set: skill.category.slice(0, -7) },
-      skillgroup: { $set: typeof(skill.skillgroup) === 'object' ? '-' : skill.skillgroup },
-      default: { $set: (skill.default === "True") },
-      specOptions: { $set: skill.specs.hasOwnProperty('spec') ? generateSpecOptions(skill.specs.spec) : null },
+      skillgroup: {
+        $set: typeof skill.skillgroup === 'object' ? '-' : skill.skillgroup
+      },
+      default: { $set: skill.default === 'True' },
+      specOptions: {
+        $set: skill.specs.hasOwnProperty('spec')
+          ? generateSpecOptions(skill.specs.spec)
+          : null
+      },
       $unset: ['specs']
     });
   }),
@@ -49,7 +53,11 @@ const skills = {
     return update(skill, {
       attribute: { $set: skill.attribute.toLowerCase() },
       attrName: { $set: attrNames[skill.attribute] },
-      specOptions: { $set: skill.specs.hasOwnProperty('spec') ? generateSpecOptions(skill.specs.spec) : null },
+      specOptions: {
+        $set: skill.specs.hasOwnProperty('spec')
+          ? generateSpecOptions(skill.specs.spec)
+          : null
+      },
       custom: { $set: false },
       $unset: ['specs', 'default', 'skillgroup']
     });
@@ -68,7 +76,7 @@ function generateSpecOptions(spec) {
     return {
       id: uuid(),
       name: specName,
-      isCustomCategory: (specName.charAt(0) === '['),
+      isCustomCategory: specName.charAt(0) === '[',
       isCustom: false
     };
   });
@@ -91,10 +99,12 @@ export class skillPanel extends React.Component {
    * @param  {string}  id     The element's id
    * @param  {number}  value  The new value to set
    * @param  {string}  type   Karma or base
-   * @param  {Object}  props  Properties/keys for the element being updated (skill vs. skill group) 
+   * @param  {Object}  props  Properties/keys for the element being updated (skill vs. skill group)
    */
   updateSkillElement(id, value, type, props) {
-    const i = this.props[props.elements].findIndex(item => item[props.id] === id);
+    const i = this.props[props.elements].findIndex(
+      item => item[props.id] === id
+    );
     const diff = value - this.props[props.elements][i][type];
 
     if (diff !== 0) {
@@ -104,18 +114,28 @@ export class skillPanel extends React.Component {
         }
       });
 
-      let karmaDiff = karmaCost(this.props[props.elements][i], updateElements[i], props.factor, props.startingProp);
+      let karmaDiff = karmaCost(
+        this.props[props.elements][i],
+        updateElements[i],
+        props.factor,
+        props.startingProp
+      );
 
       let charUpdate = {};
-      
+
       // Update a skillgroup's rating in its child skills
       if (props.elements === 'skillGroups') {
         let updateSkills = this.props.skills.map(skill => {
           if (skill.skillgroup !== updateElements[i].name) {
             return skill;
           }
-          const updateSkill = update(skill, { groupRating: { $set: (updateElements[i].base + updateElements[i].karma) } });
-          karmaDiff = karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
+          const updateSkill = update(skill, {
+            groupRating: {
+              $set: updateElements[i].base + updateElements[i].karma
+            }
+          });
+          karmaDiff =
+            karmaDiff + karmaCost(skill, updateSkill, 2, 'groupRating');
           return updateSkill;
         });
         charUpdate.skills = updateSkills;
@@ -157,23 +177,26 @@ export class skillPanel extends React.Component {
    * @param {string} skillPropKey The key for the array of appropriate skill objects to update
    */
   addSpec(skill, spec, skillPropKey) {
-    const i = this.props[skillPropKey].findIndex(row => (row.guid === skill.guid));
+    const i = this.props[skillPropKey].findIndex(
+      row => row.guid === skill.guid
+    );
     const skillUpdate = update(this.props[skillPropKey], {
       [i]: {
         specs: { $push: [spec] },
-        specOptions: { $set: skill.specOptions.filter(item => (item.id !== spec.id)) }
+        specOptions: {
+          $set: skill.specOptions.filter(item => item.id !== spec.id)
+        }
       }
     });
 
     let charUpdate = {};
     charUpdate[skillPropKey] = skillUpdate;
     if (spec.type === 'base') {
-      this.setState({ skillPtsRemaining: this.state.skillPtsRemaining - 1});
-    }
-    else {
+      this.setState({ skillPtsRemaining: this.state.skillPtsRemaining - 1 });
+    } else {
       charUpdate.karmaRemaining = this.props.karmaRemaining - 7;
     }
-    
+
     this.props.updateCharacter(charUpdate);
   }
 
@@ -185,22 +208,22 @@ export class skillPanel extends React.Component {
    * @param {string} skillPropKey The key for the array of appropriate skill objects to update
    */
   removeSpec(skill, spec, skillPropKey) {
-    const i = this.props[skillPropKey].findIndex(row => (row.guid === skill.guid));
+    const i = this.props[skillPropKey].findIndex(
+      row => row.guid === skill.guid
+    );
     let updateObj = {
       [i]: {
-        specs: { $set: skill.specs.filter(item => (item.id !== spec.id)) }
+        specs: { $set: skill.specs.filter(item => item.id !== spec.id) }
       }
     };
-    if (! spec.isCustom) {
+    if (!spec.isCustom) {
       updateObj[i].specOptions = {
         $set: skill.specOptions.concat([spec]).sort((a, b) => {
           if (a.isCustomCategory === b.isCustomCategory) {
             return a.name.localeCompare(b.name);
-          }
-          else if (a.isCustomCategory) {
+          } else if (a.isCustomCategory) {
             return -1;
-          }
-          else {
+          } else {
             return 1;
           }
         })
@@ -211,8 +234,7 @@ export class skillPanel extends React.Component {
     charUpdate[skillPropKey] = update(this.props[skillPropKey], updateObj);
     if (spec.type === 'base') {
       this.setState({ skillPtsRemaining: this.state.skillPtsRemaining + 1 });
-    }
-    else {
+    } else {
       charUpdate.karmaRemaining = this.props.karmaRemaining + 7;
     }
     this.props.updateCharacter(charUpdate);
