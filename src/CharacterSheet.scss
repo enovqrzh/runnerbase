@@ -1,4 +1,4 @@
-@import "@blueprintjs/core/lib/scss/variables.scss";
+@import '@blueprintjs/core/lib/scss/variables.scss';
 
 body {
   background-color: $pt-dark-app-background-color;
@@ -88,7 +88,8 @@ div.rb-priority-description-container {
   cursor: unset;
   background-image: none;
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba($black, 0.2), inset 0 -1px 0 rgba($black, 0.1);
+  box-shadow: inset 0 0 0 1px rgba($black, 0.2),
+    inset 0 -1px 0 rgba($black, 0.1);
 }
 
 div.rb-priority-selector div.bp3-button {
@@ -211,6 +212,11 @@ table#rb-skill-table tbody tr td {
   box-shadow: inset -1px 1px 0 0 $pt-dark-divider-white;
 }
 
+// Skill specialization tags
+td.rb-table-tag span.bp3-tag {
+  margin-right: 3px;
+}
+
 // Skill specialization dialog
 div.rb-spec-add-dialog {
   justify-content: space-between;
@@ -218,4 +224,10 @@ div.rb-spec-add-dialog {
 
 div.rb-spec-add-dialog label.bp3-radio {
   margin-bottom: 5px;
+}
+
+// Native language rows in knowledge skill table
+table#rb-know-skill-table td.rb-know-skill-table-native-language {
+  font-style: italic;
+  text-align: center;
 }

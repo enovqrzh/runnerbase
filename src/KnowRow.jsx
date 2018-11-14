@@ -1,19 +1,51 @@
 import React from 'react';
-import { NumericInput, Button, Tag, Colors, HTMLSelect } from "@blueprintjs/core";
-import Transition from 'react-transition-group/Transition'
+import {
+  NumericInput,
+  Button,
+  Tag,
+  Colors,
+  HTMLSelect
+} from '@blueprintjs/core';
+import Transition from 'react-transition-group/Transition';
 import update from 'immutability-helper';
 
 class KnowRow extends React.PureComponent {
   constructor(props) {
     super(props);
 
-    this.state = { 
+    this.state = {
       mounted: false,
       catOpts: {
-        Academic: { label: 'Academic', value: 'Academic', attribute: 'log', attrName: 'Logic' },
-        Interests: { label: 'Interests', value: 'Interests', attribute: 'int', attrName: 'Intuition' },
-        Professional: { label: 'Professional', value: 'Professional', attribute: 'log', attrName: 'Logic' },
-        Street: { label: 'Street', value: 'Street', attribute: 'int', attrName: 'Intuition' }
+        Academic: {
+          label: 'Academic',
+          value: 'Academic',
+          attribute: 'log',
+          attrName: 'Logic'
+        },
+        Interests: {
+          label: 'Interests',
+          value: 'Interests',
+          attribute: 'int',
+          attrName: 'Intuition'
+        },
+        Language: {
+          label: 'Language',
+          value: 'Language',
+          attribute: 'int',
+          attrName: 'Intuition'
+        },
+        Professional: {
+          label: 'Professional',
+          value: 'Professional',
+          attribute: 'log',
+          attrName: 'Logic'
+        },
+        Street: {
+          label: 'Street',
+          value: 'Street',
+          attribute: 'int',
+          attrName: 'Intuition'
+        }
       }
     };
 
@@ -22,29 +54,48 @@ class KnowRow extends React.PureComponent {
     this.updateCategory = this.updateCategory.bind(this);
     this.openSpecAdd = this.openSpecAdd.bind(this);
     this.removeSpec = this.removeSpec.bind(this);
+    this.removeSkill = this.removeSkill.bind(this);
   }
 
   componentDidMount() {
     this.setState({ mounted: true });
   }
 
-  updateSkillProps = { id: 'guid', elements: 'knowledgeSkills', pts: 'skillPtsRemaining', factor: 1, startingProp: null };
+  updateSkillProps = {
+    id: 'guid',
+    elements: 'knowledgeSkills',
+    pts: 'skillPtsRemaining',
+    factor: 1,
+    startingProp: null
+  };
 
   updateSkillBase(value) {
-    this.props.updateSkill(this.props.skill.guid, value, 'base', this.updateSkillProps);
+    this.props.updateSkill(
+      this.props.skill.guid,
+      value,
+      'base',
+      this.updateSkillProps
+    );
   }
 
   updateSkillKarma(value) {
-    this.props.updateSkill(this.props.skill.guid, value, 'karma', this.updateSkillProps);
+    this.props.updateSkill(
+      this.props.skill.guid,
+      value,
+      'karma',
+      this.updateSkillProps
+    );
   }
 
   updateCategory(event) {
     const cat = this.state.catOpts[event.currentTarget.value];
-    this.props.updateSkillProperties(update(this.props.skill, {
-      category: { $set: cat.value },
-      attribute: { $set: cat.attribute },
-      attrName: { $set: cat.attrName }
-    }));
+    this.props.updateSkillProperties(
+      update(this.props.skill, {
+        category: { $set: cat.value },
+        attribute: { $set: cat.attribute },
+        attrName: { $set: cat.attrName }
+      })
+    );
   }
 
   openSpecAdd() {
@@ -53,8 +104,14 @@ class KnowRow extends React.PureComponent {
 
   removeSpec(event, item) {
     const specName = item.children;
-    const spec = this.props.skill.specs.find(item => (item !== null && item.name === specName));
-    this.props.removeSpec(this.props.skill, spec, "knowledgeSkills");
+    const spec = this.props.skill.specs.find(
+      item => item !== null && item.name === specName
+    );
+    this.props.removeSpec(this.props.skill, spec, 'knowledgeSkills');
+  }
+
+  removeSkill() {
+    this.props.removeSkill(this.props.skill);
   }
 
   render() {
@@ -67,18 +124,16 @@ class KnowRow extends React.PureComponent {
     if (this.props.skillPtsRemaining < 0) {
       baseMax = this.props.skill.base;
       baseIntent = this.props.skill.base > 0 ? 'warning' : null;
-    } 
-    
-    let row = (
+    }
+
+    const natCols = this.props.skill.nativeLanguage ? (
       <React.Fragment>
-        <td>{this.props.skill.name}</td>
-        <td>
-          <HTMLSelect
-            options={Object.values(this.state.catOpts)}
-            value={this.props.skill.category}
-            onChange={this.updateCategory}
-          />
+        <td colSpan="4" className="rb-know-skill-table-native-language">
+          Native Language
         </td>
+      </React.Fragment>
+    ) : (
+      <React.Fragment>
         <td className="rb-table-numeric">
           <NumericInput
             min="0"
@@ -99,12 +154,38 @@ class KnowRow extends React.PureComponent {
         <td className="rb-table-numeric">{diceRating}</td>
         <td className="rb-table-tag">
           {this.props.skill.specs.map(spec => (
-            <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>{spec.name}</Tag>
+            <Tag minimal={true} key={spec.id} onRemove={this.removeSpec}>
+              {spec.name}
+            </Tag>
           ))}
-          <Button minimal={true} onClick={this.openSpecAdd} icon="add" intent="success" />
+          <Button
+            minimal={true}
+            onClick={this.openSpecAdd}
+            icon="add"
+            intent="success"
+          />
         </td>
+      </React.Fragment>
+    );
+
+    let row = (
+      <React.Fragment>
+        <td>{this.props.skill.name}</td>
         <td>
-          <Button icon='trash' minimal={true} intent="danger" />
+          <HTMLSelect
+            options={Object.values(this.state.catOpts)}
+            value={this.props.skill.category}
+            onChange={this.updateCategory}
+          />
+        </td>
+        {natCols}
+        <td>
+          <Button
+            icon="trash"
+            minimal={true}
+            intent="danger"
+            onClick={this.removeSkill}
+          />
         </td>
       </React.Fragment>
     );
@@ -114,7 +195,7 @@ class KnowRow extends React.PureComponent {
 
       const defaultStyle = {
         transitionProperty: 'opacity, background-color',
-        transitionDuration: `${duration/4}ms, ${duration}ms`,
+        transitionDuration: `${duration / 4}ms, ${duration}ms`,
         transitionTimingFunction: 'ease-in-out, ease-in-out',
         opacity: 0,
         backgroundColor: 'transparent'
@@ -127,11 +208,13 @@ class KnowRow extends React.PureComponent {
 
       return (
         <Transition in={this.state.mounted} timeout={duration}>
-          {(state) => (
-            <tr style={{
-              ...defaultStyle,
-              ...transitionStyles[state]
-            }}>
+          {state => (
+            <tr
+              style={{
+                ...defaultStyle,
+                ...transitionStyles[state]
+              }}
+            >
               {row}
             </tr>
           )}
@@ -139,7 +222,7 @@ class KnowRow extends React.PureComponent {
       );
     }
 
-    return (<tr>{row}</tr>);
+    return <tr>{row}</tr>;
   }
 }
 
